@@ -1,5 +1,12 @@
 # Project status
 
+## Current scope decision
+
+- Keep the symbolic training corpus fixed at the six source MIDI files listed in `data/manifest.csv` for this baseline. This is the project owner's chosen scope, not a claim that six pieces represent the full genre.
+- Preserve the six-item corpus and its recorded source IDs, license metadata, hashes, and processing results so the baseline remains auditable.
+- Treat future corpus expansions as separately documented experiments, with provenance and license review for every added file.
+- Keep the pretrained MusicGen prompt experiment distinct: it is not trained on these six MIDI files.
+
 ## Implemented
 
 - Prompt-conditioned MusicGen inference with Boogie-Woogie presets, CLI, Gradio UI, WAV output, and JSON provenance.
@@ -21,5 +28,7 @@
 ## Suggested next work
 
 1. Listen to the MusicGen WAV and generated MIDI rendering, then record human scores using `EVALUATION.md`.
-2. Grow the curated MIDI corpus only after reviewing each candidate's provenance and per-item license fields.
-3. Compare the character LSTM with event-based or duration-aware MIDI encodings while keeping the reference-compatible baseline intact.
+2. Compare the six source MIDI files with generated MIDI using the same parser for pitch range, event density, interval patterns, empty tick slots, and repeated n-grams. Treat these as exploratory diagnostics, not proof of style or originality.
+3. Compare sampling settings while holding the six-file corpus and trained checkpoint fixed; save each seed and generation recipe.
+4. Consider event-based or duration-aware MIDI encodings as a separately documented follow-up while keeping this reference-compatible baseline intact.
+
