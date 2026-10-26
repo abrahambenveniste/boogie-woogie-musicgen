@@ -1,6 +1,6 @@
 # Boogie-Woogie Music Generation
 
-An applied generative-music project with two inspectable AI workflows: text-conditioned MusicGen audio inference, and a custom character-level PyTorch LSTM trained on Boogie-Woogie MIDI. The symbolic pipeline follows the MIDI → text → recurrent model → MIDI approach in [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), adapted to a small Boogie-Woogie dataset with an auditable source manifest.
+An applied generative-music project with two inspectable AI workflows: text-conditioned MusicGen audio inference, and a custom character-level PyTorch LSTM trained on Boogie-Woogie MIDI. The symbolic pipeline follows the MIDI → text → recurrent model → MIDI approach, adapted to a small Boogie-Woogie dataset with an auditable source manifest.
 
 > **Listen to the MusicGen take:** [4-second WAV](outputs/boogie-woogie-demo.wav) · [generation recipe](outputs/boogie-woogie-demo.json).  
 > **Inspect a symbolic-RNN output:** [generated MIDI](outputs/symbolic/boogie-rnn-demo-000.mid) · [generated text](outputs/symbolic/boogie-rnn-demo.txt) · [generation recipe](outputs/symbolic/boogie-rnn-demo.json).
