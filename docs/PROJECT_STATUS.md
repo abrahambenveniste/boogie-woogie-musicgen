@@ -7,17 +7,18 @@
 - CLI and Gradio prompt studio.
 - WAV output and a metadata JSON sidecar for each generation.
 - Technical methodology, data/model provenance, licensing, reference analysis, reproducibility, and evaluation documentation.
+- One 3.94-second MusicGen sample in `outputs/boogie-woogie-demo.wav`, with its generation recipe in the matching JSON sidecar.
 
 ## Not claimed
 
 - No custom model training or fine-tuning.
 - No project-owned Boogie-Woogie training dataset.
-- No generated audio sample or benchmark result has been added yet.
+- No benchmark or structured listening study has been completed yet; the committed sample demonstrates the pipeline only.
 - No exact BPM, MIDI, score, or song-form guarantee.
 
 ## Next iteration
 
-1. Generate and listen to several short takes on a CUDA-capable machine.
-2. Choose one representative output, retain its JSON recipe, and publish it only after listening and checking applicable model terms.
-3. Run the small listening protocol in `EVALUATION.md` and record the actual results.
-4. Explore melody conditioning or MIDI-aware constraints only if exact note control becomes a project requirement.
+1. Listen to the sample and generate longer alternatives on a CUDA-capable machine.
+2. Run the small listening protocol in `EVALUATION.md` and record the actual results.
+3. Explore melody conditioning or MIDI-aware constraints only if exact note control becomes a project requirement.
+

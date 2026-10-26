@@ -28,9 +28,12 @@ The JSON sidecar records the actual prompt, requested and measured duration, che
 
 A seed is useful provenance, not a guarantee of bit-for-bit reproduction. Checkpoint updates, dependency changes, device differences, nondeterministic kernels, or changes in generation code can alter the waveform.
 
+The repository's current short sample is `outputs/boogie-woogie-demo.wav`; its companion JSON file records the prompt, checkpoint, seed, parameters, software versions, and device used for that particular generation. It was generated on CPU, so runtime was substantially slower than expected on a CUDA GPU.
+
 ## Boundaries
 
 - A prompt does not impose exact BPM, meter, notes, chord progression, bar count, or piano technique.
 - The default checkpoint has a 30-second generation limit; this project is aimed at short examples.
 - No generated output is committed by default. Review a take before deciding whether to publish it.
 - Generated audio rights are not settled solely by the model-weight license. Review current checkpoint terms and applicable rights before reuse.
+

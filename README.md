@@ -2,7 +2,7 @@
 
 An applied generative-music project: prompt a pretrained text-to-music model to make short, piano-led Boogie-Woogie recordings, save them as WAV, and keep the prompt and generation settings beside each output.
 
-> **Listen:** generate a first take with the instructions below. This repository does not yet contain a generated audio sample, so it does not present a mock or hand-made recording as model output.
+> **Listen to a real model output:** [4-second Boogie-Woogie sample](outputs/boogie-woogie-demo.wav) · [generation recipe](outputs/boogie-woogie-demo.json). It was generated with `facebook/musicgen-small` using the included CLI; the sidecar records its prompt and settings.
 
 ## What this project does
 
@@ -10,6 +10,8 @@ An applied generative-music project: prompt a pretrained text-to-music model to 
 - Turns a concise style brief into an instrumental music prompt, with presets for classic honky-tonk, Chicago club piano, and jump-blues piano.
 - Generates sampled audio and writes a WAV file plus a JSON record of the prompt, seed, model, duration, and sampling settings.
 - Includes a small Gradio interface for trying prompts without editing code.
+
+The sample is a short CPU-generated proof of the pipeline, not a claim that the model guarantees a strict 12-bar form, exact tempo, or note-level Boogie-Woogie accuracy. See the recipe JSON for the precise prompt and generation settings.
 
 This is a **text-to-audio inference project**. It does not train or fine-tune a model, create MIDI, or retrieve examples from a RAG database. The reference repository is about ragtime, not retrieval-augmented generation; this project borrows its clear MIDI-to-listenable-output workflow while choosing a modern audio-generation model.
 
@@ -67,3 +69,4 @@ The project code is MIT-licensed. The `facebook/musicgen-small` model weights ar
 This project was inspired by [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), an AGPL-3.0 experiment that turns ragtime MIDI into a character stream, trains a recurrent neural network, and converts generated streams back to MIDI. No code or MIDI files from that repository are copied here. See the [reference review](docs/REFERENCE_REVIEW.md) for the detailed analysis and the reasons for the different representation and model.
 
 MusicGen was introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284) and is distributed as part of [AudioCraft](https://github.com/facebookresearch/audiocraft).
+
