@@ -1,0 +1,24 @@
+{
+  "source_text": "outputs/symbolic/boogie-rnn-demo.txt",
+  "source_text_sha256": "15acc121891f7d97940a144cc032de8431ceb4f002c80584c27a00a47372ff1e",
+  "record_index": 0,
+  "csv_file": "outputs/symbolic/boogie-rnn-demo-000.csv",
+  "csv_sha256": "6114708ec4a793195b3a675c9a59c8076e04ae0540c07d6f62f19fdd61dc1e20",
+  "midi_file": "outputs/symbolic/boogie-rnn-demo-000.mid",
+  "midi_sha256": "90ce3cd903e087e610aca49d04de7f84d38e47d6fcb6be9a074359cab5b3782a",
+  "decoder": "csvmidi",
+  "csvmidi_version_label": "Fourmilab MIDICSV 1.1",
+  "csvmidi_executable_sha256": "1638090148b6c72928042d444c12db1d9b100870c77c99d468aca7283d6a4514",
+  "format": 0,
+  "tracks": 1,
+  "ppqn": 480,
+  "tempo_us_per_quarter": 500000,
+  "tick_slots": 4800,
+  "positive_velocity_note_on_events": 38,
+  "pitch_range": [
+    28,
+    77
+  ],
+  "duration_seconds": 5.0,
+  "python_version": "3.13.15"
+}

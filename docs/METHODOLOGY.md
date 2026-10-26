@@ -1,45 +1,38 @@
 # Methodology
 
-## Objective
+This repository contains two distinct generation experiments. The first uses a pretrained text-to-audio model. The second trains a small symbolic music model from MIDI in this repository using the method described in `s-zeng/rag-shenanigann`.
 
-Generate short, listenable, instrumental Boogie-Woogie-inspired piano audio from a human-written text brief. The project prioritizes a reproducible, inspectable inference workflow over training a new foundation model.
+## Track A: prompt-conditioned MusicGen audio
 
-## Model
+The MusicGen path asks Meta's `facebook/musicgen-small` checkpoint to generate short audio from a written music brief. A text encoder represents the prompt, an autoregressive Transformer samples discrete audio-code tokens, and an EnCodec decoder reconstructs a waveform. The project uses Hugging Face Transformers and records the prompt, checkpoint, duration, seed, sampling controls, device, library versions, sample rate, and output duration in JSON next to each WAV.
 
-The default checkpoint is Meta’s `facebook/musicgen-small`, a 300-million-parameter text-to-music model. MusicGen uses a frozen text encoder to represent the written prompt, then an autoregressive Transformer to predict discrete audio codes. An EnCodec audio decoder converts those codes to waveform audio. The released MusicGen setup models four codebooks at 50 frames per second and produces 32 kHz audio.
+Boogie-Woogie prompts state the intended piano ensemble, left-hand bass role, right-hand riffs, shuffle/swing feel, blues form, and absence of vocals. These are soft conditions: the model can drift from the brief and does not guarantee a BPM, meter, chord sequence, exact 12-bar form, hand independence, or note-level Boogie-Woogie accuracy.
 
-The implementation uses the `MusicgenForConditionalGeneration` and `AutoProcessor` interfaces from Hugging Face Transformers. It samples tokens (`do_sample=True`) and exposes temperature, top-k, and classifier-free guidance scale. Duration maps to the model’s frame budget at approximately 50 generated frames per second. A fixed random seed makes a generation attempt easier to reproduce, but does not promise bit-identical output across different hardware, library versions, or kernels.
+Primary technical references: [MusicGen paper](https://arxiv.org/abs/2306.05284), [AudioCraft MusicGen documentation](https://github.com/facebookresearch/audiocraft/blob/main/docs/MUSICGEN.md), [Hugging Face model documentation](https://huggingface.co/docs/transformers/en/model_doc/musicgen), and the [MusicGen model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md).
 
-Primary references:
+## Track B: MIDI character LSTM
 
-- [MusicGen paper: “Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284)
-- [AudioCraft MusicGen technical documentation](https://github.com/facebookresearch/audiocraft/blob/main/docs/MUSICGEN.md)
-- [Hugging Face MusicGen model documentation](https://huggingface.co/docs/transformers/en/model_doc/musicgen)
-- [MusicGen model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md)
+This path adapts the reference's symbolic sequence method to Boogie-Woogie. It is custom training performed by this repository, not a pretrained music model and not text-prompted generation.
 
-## Boogie-Woogie prompting
+1. Select MIDI scores from PDMX v8, retain their source fields and hashes in a manifest, and convert each multi-track MIDI to Type 0.
+2. Use `midicsv` to read the MIDI header and events. Preserve PPQN, the first tempo, and positive-velocity note-on pitches only.
+3. Encode each pitch as `chr(33 + pitch)`. Concatenate characters for pitches on the same absolute tick. Put one space between consecutive tick slots, including blank slots. Separate pieces with three newlines.
+4. Train a character-level LSTM to predict the next character from fixed-length windows sampled from the concatenated corpus. The modern path uses PyTorch, embeddings, cross-entropy, AdamW, and gradient clipping. The documented legacy path uses upstream Torch7 `torch-rnn` in the `crisbal/torch-rnn:base` Docker image.
+5. Sample a new note stream. The modern sampler uses the first record's PPQN/tempo prefix and restricts tokens to the observed pitch alphabet plus space, so generated text remains decodable.
+6. Reconstruct a MIDI CSV file and MIDI file. `csvmidi` is preferred when installed; Mido is included as a fallback writer.
 
-The prompt presets make musical intent explicit across a few dimensions:
+The full command sequence, tool versions and roles, training parameters, MIDI format checks, and implementation differences are documented in [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md).
 
-| Dimension | Prompt language used |
-| --- | --- |
-| Style | Boogie-Woogie, blues, jump blues |
-| Ensemble | Solo piano, piano foreground, instrumental |
-| Groove | Swing, shuffle, driving or relaxed |
-| Piano role | Repeating left-hand bass, syncopated right-hand riffs and fills |
-| Form/color | 12-bar blues feel, turnarounds, club or dance-hall character |
-| Exclusions | No vocals |
+### What the symbolic model can learn
 
-These are soft text conditions. The checkpoint does not provide hard constraints for BPM, meter, chord progression, hand independence, bar count, or a specific piano technique. It may add other instruments or fail to follow parts of a prompt. The audio must be listened to and judged as a generated interpretation.
+The LSTM estimates the next-character distribution over one compact serialized score representation. It can learn frequent pitch/tick patterns in the six training items. It does not receive a natural-language prompt, explicit chord labels, part labels, bar markers, note durations, or a formal theory representation. The corpus is deliberately small and is useful for demonstrating an end-to-end data/model pipeline, not for a strong claim about genre-wide composition.
 
-## Why audio generation instead of the reference’s MIDI stream
+### Information loss and decoder assumptions
 
-The reference serializes MIDI note events into a character stream and asks a recurrent network to continue it. That is compact and yields MIDI after decoding, but its scripts discard note duration and velocity and reconstruct timing from character positions. This project uses a text-conditioned audio model instead: it can produce a directly listenable WAV without a MIDI tokenizer or a separate synthesizer. The trade-off is that the output is audio rather than editable MIDI, and exact note-level musical constraints are less inspectable.
+The text representation drops note-off timing, durations, original velocities, instrument programs, channels, separate hands, later tempo changes, sustain pedal, key/time signatures, and other performance controls. It uses a single note character per note-on, so same-tick chords are represented by adjacent characters. MIDI reconstruction assigns velocity 96 and keeps a pitch active until a later tick group changes or clears it. These are explicit simplifications of the reference method.
 
-## Generation recipe
+The reference decoder uses character-string offsets for event times, so chord width can affect reconstructed timing. This implementation uses tick-slot indices instead and closes final notes before end-of-track. That improves temporal consistency and MIDI validity but does not restore information discarded before training.
 
-Each run records the prompt, model ID, requested and measured duration, seed, device, sampling parameters, sample rate, channel count, Python version, and library versions in a JSON file beside the WAV. The model ID defaults to the public `facebook/musicgen-small` checkpoint and may be overridden on the CLI. The weights are downloaded at first use and are not stored in Git.
+## Evaluation
 
-## Evaluation approach
-
-There are no performance claims or generated-sample scores in this repository yet. See the [evaluation plan](EVALUATION.md) for a small listening protocol that separates style fit, groove, prompt adherence, audio quality, and repetition. It avoids presenting subjective judgments as objective model benchmarks.
+The MusicGen sample is a pipeline demonstration. The symbolic LSTM sample is a generated MIDI continuation with a recorded seed, temperature, checkpoint hash, corpus hash, PPQN, tempo, and requested tick count. Neither is a benchmark. See [`EVALUATION.md`](EVALUATION.md) for a listening and inspection protocol that separates prompt/style fit, rhythmic behavior, form, output validity, and limitations.

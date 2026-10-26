@@ -2,26 +2,39 @@
 
 ## Current status
 
-No model-output audio has been committed and no listening scores are claimed yet. The project code creates JSON metadata so future comparisons can be tied to the exact prompt and generation settings.
+The repository contains one MusicGen WAV and one symbolic-RNN MIDI demonstration with its recipes and training log. They show that both pipelines run; they are not benchmark results. No structured listener scores are claimed.
 
-## Small listening study
+## Listening protocol
 
-Generate three takes for each of the three presets using the same duration and seed list. Listen in randomized order and score each take from 1 (weak) to 5 (strong) on:
+For a small exploratory listening study, generate three takes per method with a documented seed list. Randomize the playback order and ask listeners to score from 1 (weak) to 5 (strong):
 
 | Criterion | Listening question |
 | --- | --- |
-| Style fit | Does this sound recognizably Boogie-Woogie or closely related piano blues? |
+| Style fit | Does it sound recognizably like Boogie-Woogie or closely related piano blues? |
 | Groove | Is there a convincing repeated bass/shuffle pulse and forward motion? |
-| Prompt adherence | Does the take reflect the described solo piano, mood, and arrangement? |
-| Audio quality | Are there distracting artifacts, abrupt cuts, or unstable timbres? |
-| Coherence | Does the musical idea hold together through the short take? |
+| Coherence | Does the idea hold together through the take? |
+| Variety | Does it avoid simply repeating one short phrase? |
+| Artifacts | Are there distracting audio or MIDI-rendering problems? |
 
-Keep the generated WAV and JSON sidecar together. Record the date, listener, headphone/speaker setup, prompt, seed, model ID, and scores. Report the number of takes and show individual or median scores; do not treat a small subjective sample as a benchmark.
+For MusicGen, also score prompt adherence. For the symbolic RNN, compare the generated MIDI with the training scores in a piano roll and record pitch range, event density, note lengths reconstructed by the decoder, and repetition. Keep the MusicGen prompt/JSON and RNN MIDI/text/JSON/checkpoint hash together. Record the listener, date, playback setup, model settings, and individual scores; report sample count and median or range rather than a broad claim.
 
-## Useful comparisons
+## Symbolic diagnostics
 
-- **Prompt ablation:** compare a minimal “Boogie-Woogie piano” prompt with the full left-hand/right-hand groove description.
-- **Sampling:** compare a small set of temperatures while holding prompt and seed fixed, noting that same-seed comparisons across settings are not a controlled musical A/B in every backend.
-- **Style presets:** compare classic honky-tonk, Chicago-club, and jump-blues directions.
+The RNN is trained on only six scores, so simple diagnostics are useful but not sufficient measures of musical quality. A future evaluation can compare generated and source sequences on:
 
-Do not state that the model follows an exact BPM, 12-bar form, chord progression, or hand pattern unless that property is independently verified from the audio. The text prompt alone does not enforce those constraints.
+- pitch histogram and register;
+- positive-velocity note-on density per second;
+- interval and repeated-pitch distributions;
+- fraction of empty tick slots;
+- repeated n-grams or exact substring overlap with training data;
+- generated MIDI readability in a piano roll and playback by a listener.
+
+These measurements should be calculated on source and generated MIDI with the same parser. They do not establish plagiarism, originality, style authenticity, or listener preference by themselves.
+
+## Controlled comparisons
+
+- Compare a small range of LSTM temperatures while holding the checkpoint, tick budget, and seed fixed.
+- Compare a minimal MusicGen prompt against the full left-hand/right-hand groove brief, with duration and seed fixed.
+- Keep symbolic LSTM and MusicGen results in separate groups; their data, conditioning, output format, and learned task differ, so they are not a direct apples-to-apples model benchmark.
+
+Do not state that an output follows exact BPM, 12-bar form, chord progression, or hand pattern unless that property is independently inspected from the generated audio or MIDI.

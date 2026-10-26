@@ -1,13 +1,84 @@
 # Reproducibility and operation
 
-## Environment
+## Python environment
 
-- Python 3.10 or newer.
-- Install from this repository with `python -m pip install -e ".[app]"`.
-- The first generation downloads model files from Hugging Face; keep enough disk space for the checkpoint and cache.
-- CUDA is preferred for practical generation speed. The code also selects Apple MPS when available and otherwise falls back to CPU. CPU generation may be slow.
+Use Python 3.10 or newer. The symbolic and MusicGen code uses PyTorch; install the optional Mido dependency for MIDI normalization and fallback MIDI writing:
 
-## Run recipe
+```powershell
+python -m pip install -e ".[app,symbolic]"
+```
+
+MusicGen downloads `facebook/musicgen-small` from Hugging Face at first use. Its CC-BY-NC 4.0 weights are not stored in this repository. CUDA is preferred for practical speed; CPU fallback works but can be slow.
+
+## Rebuild the symbolic corpus
+
+Install Fourmilab MIDICSV 1.1, which supplies both `midicsv` and `csvmidi`, and place those executables on `PATH` or provide explicit executable paths. Then run:
+
+```powershell
+python scripts/normalize_type0.py `
+  --input data/raw_midi `
+  --output data/normalized_midi `
+  --manifest data/processed/normalization_manifest.csv
+python scripts/process.py `
+  --input data/normalized_midi `
+  --output data/processed/training_data.txt `
+  --manifest data/processed/processing_manifest.csv `
+  --metadata data/processed/training_data.json `
+  --midicsv midicsv `
+  --midicsv-version "Fourmilab MIDICSV 1.1"
+```
+
+`data/manifest.csv` contains PDMX source paths, IDs, metadata, and raw file hashes. `data/processed/processing_manifest.csv` contains the actual PPQN, first tempo, tick slots, note-on count, and encoded length measured by this project's processing run.
+
+## Train and sample the PyTorch LSTM
+
+The committed demonstration uses a checkpoint and JSON sidecar under `models/`. To reproduce a new run, keep the same corpus bytes, Python/PyTorch versions, model settings, and seed:
+
+```powershell
+python scripts/train_char_rnn.py `
+  --input data/processed/training_data.txt `
+  --checkpoint models/boogie-char-lstm.pt `
+  --log outputs/symbolic/training-loss.csv `
+  --steps 1000 `
+  --sequence-length 128 `
+  --batch-size 8 `
+  --embedding-size 32 `
+  --hidden-size 96 `
+  --layers 2 `
+  --learning-rate 0.002 `
+  --seed 42
+python scripts/generate_char_rnn.py `
+  --checkpoint models/boogie-char-lstm.pt `
+  --output outputs/symbolic/boogie-rnn-demo.txt `
+  --ticks 4800 `
+  --temperature 1.0 `
+  --seed 73
+```
+
+The checkpoint JSON records corpus SHA-256, vocabulary, architecture, training hyperparameters, seed, device, library versions, final cross-entropy, and creation time. The output JSON records checkpoint and corpus hashes, generation seed, temperature, tick count, tempo, PPQN, device, and output length. Random seeds do not ensure byte-for-byte identical results across all hardware/library versions.
+
+## Decode to MIDI
+
+```powershell
+python scripts/unprocess.py outputs/symbolic/boogie-rnn-demo.txt `
+  --output-dir outputs/symbolic `
+  --prefix boogie-rnn-demo `
+  --midi-backend csvmidi `
+  --csvmidi csvmidi `
+  --csvmidi-version "Fourmilab MIDICSV 1.1"
+```
+
+This writes a `.csv` intermediate and calls `csvmidi -z` to produce the MIDI file. If `csvmidi` is not installed, set `--midi-backend mido`; the Mido fallback implements the same tick/pitch decode and writes a one-track Type-0 MIDI. `--midi-backend auto` chooses `csvmidi` when available and otherwise uses Mido.
+
+The generated MIDI is symbolic. To make a WAV rendering, open it in a DAW or use a local SoundFont renderer such as TiMidity++; the soundfont is a separate dependency and is not bundled here.
+
+## Legacy Torch7 route
+
+The exact historical workflow uses `crisbal/torch-rnn:base` and its upstream Torch7 `torch-rnn` checkout. See [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md) for `scripts/preprocess.py`, `th train.lua`, and `th sample.lua` commands. The Docker image is based on Ubuntu 14.04 and is not pinned to a modern, maintained software stack. Docker was unavailable in the authoring environment, so the committed model and generated MIDI use the modern PyTorch implementation instead.
+
+## MusicGen inference recipe
+
+The committed audio sample uses the recipe in `outputs/boogie-woogie-demo.json`. A new take can be generated with:
 
 ```powershell
 boogie-woogie-generate `
@@ -20,20 +91,4 @@ boogie-woogie-generate `
   --output outputs/boogie-woogie-demo.wav
 ```
 
-For a custom prompt, pass `--prompt "..."`; custom prompt text overrides the preset and any extra notes. The WAV is accompanied by `outputs/boogie-woogie-demo.json`.
-
-## What the sidecar records
-
-The JSON sidecar records the actual prompt, requested and measured duration, checkpoint ID, seed, sampling parameters, selected device, sample rate, channel count, Python/PyTorch/Transformers versions, generation time, and a rights note. Keep it beside the audio when sharing the output.
-
-A seed is useful provenance, not a guarantee of bit-for-bit reproduction. Checkpoint updates, dependency changes, device differences, nondeterministic kernels, or changes in generation code can alter the waveform.
-
-The repository's current short sample is `outputs/boogie-woogie-demo.wav`; its companion JSON file records the prompt, checkpoint, seed, parameters, software versions, and device used for that particular generation. It was generated on CPU, so runtime was substantially slower than expected on a CUDA GPU.
-
-## Boundaries
-
-- A prompt does not impose exact BPM, meter, notes, chord progression, bar count, or piano technique.
-- The default checkpoint has a 30-second generation limit; this project is aimed at short examples.
-- No generated output is committed by default. Review a take before deciding whether to publish it.
-- Generated audio rights are not settled solely by the model-weight license. Review current checkpoint terms and applicable rights before reuse.
-
+The first call downloads model weights. Runtime, waveform details, and sampling settings are written to the matching JSON sidecar. Text prompts do not hard-constrain musical form or exact notes.

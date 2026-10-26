@@ -1,0 +1,70 @@
+{
+  "method": "MIDICSV Type-0 PPQN/tempo/pitch-per-tick text encoding",
+  "input_directory": "data/normalized_midi",
+  "midicsv_command": "midicsv",
+  "midicsv_version_label": "Fourmilab MIDICSV 1.1",
+  "midicsv_executable_sha256": "0f1dc984c5228fdfbdadae08d252c7feac59133e8cdb510eef3c5e0bde60b4cb",
+  "output_text": "data/processed/training_data.txt",
+  "output_sha256": "41d385f072b65930ee469e7dc285415cc139896247f364a4ce4bfe62a1ef781b",
+  "output_bytes": 677566,
+  "input_files": [
+    {
+      "file": "blastin_boogie.mid",
+      "normalized_midi_sha256": "20c32feebf24f82f6bf0c459e9a52baeb271c7adf5d53663c450620b502974c2",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 35040,
+      "positive_velocity_note_on_events": 321,
+      "encoded_sequence_characters": 35360
+    },
+    {
+      "file": "boogie_and_blues_bass_lines.mid",
+      "normalized_midi_sha256": "9b6408ec526da89d485f77a62070289e34b10b7f72e601c1cfd73542bc634bcf",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 200000,
+      "tick_slots": 205430,
+      "positive_velocity_note_on_events": 711,
+      "encoded_sequence_characters": 206140
+    },
+    {
+      "file": "boogie_ben.mid",
+      "normalized_midi_sha256": "b5cf12a94aa179eddf7a7acdec2a43be891f52dee0655c040cdd4dcd1205e57a",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 24720,
+      "positive_velocity_note_on_events": 163,
+      "encoded_sequence_characters": 24882
+    },
+    {
+      "file": "boogie_woogie_blues_exercises.mid",
+      "normalized_midi_sha256": "0597b24317992d49945d35b38ed8d3f6576629e3c71614797f60401f56d8ec8d",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 84384,
+      "positive_velocity_note_on_events": 339,
+      "encoded_sequence_characters": 84722
+    },
+    {
+      "file": "pinetops_boogie_woogie_in_f.mid",
+      "normalized_midi_sha256": "29300e2f754143cddb9a29cb7e3dc7886cbabfb4b5b3bfac0afc133e0a016dc5",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 375000,
+      "tick_slots": 184320,
+      "positive_velocity_note_on_events": 2416,
+      "encoded_sequence_characters": 186735
+    },
+    {
+      "file": "the_fives_boogie_woogie.mid",
+      "normalized_midi_sha256": "e859adca977f351efeb12f8c42870107490bbc02e65b451371c51a7b58b7fec8",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 428572,
+      "tick_slots": 138204,
+      "positive_velocity_note_on_events": 1440,
+      "encoded_sequence_characters": 139643
+    }
+  ],
+  "file_count": 6,
+  "total_tick_slots": 672098,
+  "positive_velocity_note_on_events": 5390,
+  "python_version": "3.13.15"
+}

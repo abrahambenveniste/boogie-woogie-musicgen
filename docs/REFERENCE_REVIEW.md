@@ -53,4 +53,8 @@ The representation is simple and gives a small RNN a single sequence to learn. I
 
 ## What this project adopts and changes
 
-This project adopts the reference’s goal of making generated music easy to hear and its emphasis on documenting preprocessing and limitations. It changes the input/data/model/output path: there is no scraped MIDI corpus or custom training step; a pretrained text-conditioned MusicGen Transformer produces audio directly as WAV. That makes a demo easier to listen to, but sacrifices MIDI editability and exact note-level control. The reference’s code and MIDI data are not copied into this project.
+The first version of this project used only prompt-conditioned MusicGen audio inference. The symbolic extension now follows the reference's MIDI → text → recurrent model → MIDI outline much more closely: it normalizes Boogie-Woogie MIDI to Type 0, uses `midicsv`, serializes PPQN/tempo/pitch-onsets with tick separators, trains a character-level recurrent model, and decodes a generated stream back through MIDI CSV. It uses a modern PyTorch LSTM for the runnable training path and documents the legacy Torch7 Docker option named by the reference.
+
+The project keeps MusicGen as a separate modern audio-generation path. The two models have different conditioning and outputs: MusicGen accepts text prompts and emits WAV; the symbolic LSTM learns a small MIDI corpus and emits a note stream/MIDI, with no natural-language prompt interface. The Boogie-Woogie corpus and source manifest are new. No reference code, MIDI files, or preprocessed training corpus are copied into this project.
+
+The new implementation also corrects the reference decoder's timing and note closure: it uses the tick-slot index rather than the character offset as MIDI time and emits note-offs for the final group before end-of-track. It still cannot recover note durations because the training representation discarded note-off events.
