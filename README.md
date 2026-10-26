@@ -95,5 +95,5 @@ I added a second view of the MIDI files with MidiTok's REMI tokenizer. It produc
 - Neither path guarantees a convincing performance or a strict 12-bar blues structure.
 - The MusicGen weights are licensed **CC-BY-NC 4.0**. Project code is MIT-licensed; PDMX source records are listed in the data manifest.
 
-The MusicGen experiment uses Meta's [`facebook/musicgen-small`](https://huggingface.co/facebook/musicgen-small), introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284). The symbolic experiment is inspired by [`rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann).
+The MusicGen experiment uses Meta's [`facebook/musicgen-small`](https://huggingface.co/facebook/musicgen-small), introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284).
 
