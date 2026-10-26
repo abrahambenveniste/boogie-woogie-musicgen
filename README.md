@@ -36,14 +36,22 @@ The committed corpus contains **6 MIDI files**, **672,098 tick slots**, **5,390 
 
 ## Try it
 
-Use Python 3.10 or later. A CUDA GPU makes MusicGen inference and LSTM training faster; CPU execution is supported. The first MusicGen run downloads its checkpoint from Hugging Face.
+Use Python 3.10 or later. Choose the install for the path you want:
 
 ```powershell
 py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -e ".[app,symbolic]"
 ```
+
+| Use | Install command |
+| --- | --- |
+| Generate WAV audio from the command line | `python -m pip install -e ".[musicgen]"` |
+| Launch the audio prompt interface | `python -m pip install -e ".[musicgen,app]"` |
+| Generate or train symbolic MIDI | `python -m pip install -e ".[symbolic]"` |
+| Install every project feature | `python -m pip install -e ".[musicgen,app,symbolic]"` |
+
+The MIDI-only extra declares PyTorch and Mido; it does not pull in the MusicGen Transformers stack or Gradio. A CUDA GPU makes MusicGen inference and LSTM training faster; CPU execution is supported. The first MusicGen run downloads its checkpoint from Hugging Face.
 
 Generate a WAV from the command line:
 

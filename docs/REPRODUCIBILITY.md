@@ -2,11 +2,16 @@
 
 ## Python environment
 
-Use Python 3.10 or newer. The symbolic and MusicGen code uses PyTorch; install the optional Mido dependency for MIDI normalization and fallback MIDI writing:
+Use Python 3.10 or newer. Install only the dependencies for the workflow you plan to run:
 
 ```powershell
-python -m pip install -e ".[app,symbolic]"
+python -m pip install -e ".[musicgen]"          # WAV generation CLI
+python -m pip install -e ".[musicgen,app]"      # WAV CLI and Gradio interface
+python -m pip install -e ".[symbolic]"          # MIDI generation/training and Mido tools
+python -m pip install -e ".[musicgen,app,symbolic]"  # all features
 ```
+
+The symbolic-only extra installs PyTorch and Mido without the Transformers, audio, or Gradio packages. The audio interface requires both the `musicgen` and `app` extras.
 
 MusicGen downloads `facebook/musicgen-small` from Hugging Face at first use. Its CC-BY-NC 4.0 weights are not stored in this repository. CUDA is preferred for practical speed; CPU fallback works but can be slow.
 

@@ -9,16 +9,17 @@ description = "Boogie-Woogie music generation with MusicGen and a MIDI character
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
-dependencies = [
+dependencies = []
+
+[project.optional-dependencies]
+musicgen = [
   "numpy>=1.26",
   "soundfile>=0.12",
   "torch>=2.2",
   "transformers>=4.45,<6",
 ]
-
-[project.optional-dependencies]
 app = ["gradio>=5,<7"]
-symbolic = ["mido>=1.3,<2"]
+symbolic = ["mido>=1.3,<2", "torch>=2.2"]
 
 [project.scripts]
 boogie-woogie-generate = "boogie_woogie_musicgen.cli:main"
@@ -26,3 +27,4 @@ boogie-woogie-app = "boogie_woogie_musicgen.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
