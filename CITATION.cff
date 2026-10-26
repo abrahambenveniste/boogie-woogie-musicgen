@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use or adapt this project, cite it as follows."
+title: "Boogie-Woogie MusicGen"
+type: software
+version: 0.1.0
+date-released: 2026-10-26
+url: "https://github.com/abrahambenveniste/boogie-woogie-musicgen"
+abstract: >-
+  A prompt-driven demonstration of short Boogie-Woogie-inspired instrumental
+  music generation with Meta MusicGen and Hugging Face Transformers. The
+  project records prompts and generation settings beside WAV output.

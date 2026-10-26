@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "boogie-woogie-musicgen"
+version = "0.1.0"
+description = "Prompt-driven Boogie-Woogie music generation with Meta MusicGen"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = [
+  "numpy>=1.26",
+  "soundfile>=0.12",
+  "torch>=2.2",
+  "transformers>=4.45,<6",
+]
+
+[project.optional-dependencies]
+app = ["gradio>=5,<7"]
+
+[project.scripts]
+boogie-woogie-generate = "boogie_woogie_musicgen.cli:main"
+boogie-woogie-app = "boogie_woogie_musicgen.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
