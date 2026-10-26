@@ -2,10 +2,10 @@
 
 ## Current examples
 
-| Path | Saved output | What it demonstrates |
+| Model | How it generates music | Listening result |
 | --- | --- | --- |
-| MusicGen | [10.94-second WAV](../outputs/boogie-woogie-demo.wav) | A text prompt sent to a pretrained audio model; it does not learn from the nine scores. |
-| MIDI LSTM | [10-second MIDI](../outputs/symbolic/boogie-rnn-duration-demo-000.mid) | A local model trained on the nine-score corpus, decoded into note events. |
+| MusicGen | [10.94-second WAV](../outputs/boogie-woogie-demo.wav); generated from a text prompt by a pretrained model, not trained on the nine scores. | Very bad; has a huge tempo issue. |
+| MIDI LSTM | [10-second MIDI](../outputs/symbolic/boogie-rnn-duration-demo-000.mid); trained on the nine-score corpus and decoded into note events. | Okay-ish; sounds musical and stays more in tempo. |
 
 Each output has a JSON recipe beside it. The symbolic measurements and legacy comparison are in [`evaluation.json`](../outputs/symbolic/evaluation.json); per-step training loss is in [`training-loss-duration.csv`](../outputs/symbolic/training-loss-duration.csv).
 
@@ -23,7 +23,7 @@ These measurements show that the new representation produces usable note lengths
 
 ## First listening finding
 
-On an informal listen, the MIDI LSTM output sounds somewhat musical and more consistent in tempo. The MusicGen output sounds very poor and has a pronounced tempo problem. This is an initial subjective comparison; the tempo difference has not been measured in BPM, and there has not been a structured listening study.
+This is an informal listening comparison: the MIDI LSTM output is okay-ish, sounds musical, and stays more in tempo; the MusicGen output is very bad and has a huge tempo issue. These are listening judgments, not measured BPM results, and there has not been a structured listening study.
 
 ## What remains unknown
 
