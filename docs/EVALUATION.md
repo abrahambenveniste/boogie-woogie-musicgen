@@ -62,6 +62,8 @@ The RNN is trained on only six scores, so these simple diagnostics are explorato
 - note-length and polyphony summaries, with clear handling of the codec's reconstruction assumptions;
 - generated MIDI readability in a piano roll and playback by a listener.
 
+The separate [`remi-token-audit.json`](../outputs/symbolic/remi-token-audit.json) reports MidiTok REMI token counts for the same source corpus and generated MIDI takes. It records the tokenizer version, configuration, per-file source hash, event-token type counts, and a short token preview. The character-stream length and REMI token count have different definitions, so their ratio describes representation size only; it is not a quality or information-retention score. See [the tokenization note](MODERN_TOKENIZATION.md) for quantization and scope limits.
+
 These measurements should be calculated on source and generated MIDI with the same parser. They do not establish plagiarism, originality, style authenticity, or listener preference by themselves.
 
 ## Controlled comparisons
@@ -71,4 +73,3 @@ These measurements should be calculated on source and generated MIDI with the sa
 - Keep symbolic LSTM and MusicGen results in separate groups; their data, conditioning, output format, and learned task differ, so they are not a direct apples-to-apples model benchmark.
 
 Do not state that an output follows exact BPM, 12-bar form, chord progression, or hand pattern unless that property is independently inspected from the generated audio or MIDI.
-

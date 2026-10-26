@@ -18,7 +18,9 @@ The PDMX score-level `n_notes` values total 5,020. A local MIDI parser counts 5,
 
 ### Corpus size and limitations
 
-The six Type-0-processed MIDI files use 480 PPQN and encode 672,098 tick slots and 5,390 positive-velocity note-on events. The resulting training text is 677,596 ASCII bytes. All local source MIDI hashes are in the manifest. This is a small, curated starter corpus, not a representative sample of all Boogie-Woogie performance practice. It contains exercises, short examples, and historical pieces, with no held-out test split or benchmark claim.
+The six Type-0-processed MIDI files use 480 PPQN and encode 672,098 tick slots and 5,390 positive-velocity note-on events. The resulting training text is 677,566 ASCII bytes. All local source MIDI hashes are in the manifest. This is a small, curated starter corpus, not a representative sample of all Boogie-Woogie performance practice. It contains exercises, short examples, and historical pieces, with no held-out test split or benchmark claim.
+
+The optional MidiTok audit exposed a MIDI-channel caveat: `blastin_boogie.mid` stores its notes on zero-indexed channel 9 (General MIDI channel 10), which MidiTok classifies as percussion. The reference-compatible character encoder drops channel identity and learns only from note numbers and tick positions, so this score contributes key numbers as if they were ordinary pitch symbols. Keep this limitation in mind when describing the corpus as piano data. The MidiTok audit widens its percussion pitch range to 0–127 so none of this file's 321 note-on events is discarded by the tokenizer's default narrower drum range.
 
 The text encoder drops duration, note-off, velocity, instrument, channel, separate parts, later tempo changes, and performance controls. The model learns this lossy serialization; it does not train directly on the original full MIDI event stream.
 
@@ -44,4 +46,4 @@ The project does not make a blanket rights claim over MusicGen audio or generate
 
 ## Project code and dependencies
 
-The original code in this repository is under the MIT license. Fourmilab MIDICSV, Mido, PyTorch, Transformers, and MusicGen are separate upstream projects with their own licenses. `torch-rnn` is included only as an optional documented reproduction path; no Torch7 source code is vendored here. See [`LICENSE`](../LICENSE) and [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md) for tool roles and version caveats.
+The original code in this repository is under the MIT license. Fourmilab MIDICSV, Mido, PyTorch, Transformers, MusicGen, MidiTok, Symusic, and Hugging Face `tokenizers` are separate upstream projects with their own licenses. The REMI audit uses MidiTok and Symusic; it does not train a Hugging Face BPE/Unigram/WordPiece tokenizer. `torch-rnn` is included only as an optional documented reproduction path; no Torch7 source code is vendored here. See [`LICENSE`](../LICENSE), [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md), and [`MODERN_TOKENIZATION.md`](MODERN_TOKENIZATION.md) for tool roles and version caveats.

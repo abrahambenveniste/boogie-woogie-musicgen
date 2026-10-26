@@ -8,10 +8,13 @@ Use Python 3.10 or newer. Install only the dependencies for the workflow you pla
 python -m pip install -e ".[musicgen]"          # WAV generation CLI
 python -m pip install -e ".[musicgen,app]"      # WAV CLI and Gradio interface
 python -m pip install -e ".[symbolic]"          # MIDI generation/training and Mido tools
-python -m pip install -e ".[musicgen,app,symbolic]"  # all features
+python -m pip install -e ".[symbolic-modern]"   # MidiTok event-token audit
+python -m pip install -e ".[musicgen,app,symbolic,symbolic-modern]"  # all features
 ```
 
 The symbolic-only extra installs PyTorch and Mido without the Transformers, audio, or Gradio packages. The audio interface requires both the `musicgen` and `app` extras.
+
+The `symbolic-modern` extra adds MidiTok for the independent REMI event-token audit. It is not required by the character-level LSTM workflow.
 
 MusicGen downloads `facebook/musicgen-small` from Hugging Face at first use. Its CC-BY-NC 4.0 weights are not stored in this repository. CUDA is preferred for practical speed; CPU fallback works but can be slow.
 
@@ -126,4 +129,3 @@ boogie-woogie-generate `
 ```
 
 The first call downloads model weights. Runtime, waveform details, and sampling settings are written to the matching JSON sidecar. Text prompts do not hard-constrain musical form or exact notes.
-

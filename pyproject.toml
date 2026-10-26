@@ -20,6 +20,7 @@ musicgen = [
 ]
 app = ["gradio>=5,<7"]
 symbolic = ["mido>=1.3,<2", "torch>=2.2"]
+symbolic-modern = ["miditok>=3.1,<4"]
 
 [project.scripts]
 boogie-woogie-generate = "boogie_woogie_musicgen.cli:main"
@@ -27,4 +28,3 @@ boogie-woogie-app = "boogie_woogie_musicgen.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

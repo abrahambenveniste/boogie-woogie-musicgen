@@ -16,6 +16,7 @@
 - A PyTorch character LSTM training and sampling implementation, plus the legacy Torch7 Docker training recipe.
 - Three controlled symbolic MIDI takes from seeds 73, 74, and 75, with text, MIDI CSV, MIDI, and per-run metadata.
 - A reproducible Mido-based MIDI diagnostics script and a committed JSON comparison of the six source scores with all three generated takes.
+- An optional MidiTok REMI audit of the six normalized source files and committed generated takes, with per-file hashes, token-type counts, configuration, previews, and a visible source-note/token-count discrepancy field.
 - A fresh public checkout reproduced an additional five-second symbolic MIDI take using the available Python environment; dependency installation from a blank environment remains unverified.
 - Documentation for both model paths, corpus curation and licenses, exact representation, tool roles, limitations, and reproducibility.
 
@@ -26,10 +27,10 @@
 - The MIDI character codec does not preserve note durations, velocities, part labels, or expressive controls. Reconstructed note lengths are inferred from the generated tick sequence.
 - MusicGen prompts and the symbolic RNN do not guarantee exact BPM, chord progression, 12-bar form, or piano technique.
 - The documented legacy Torch7 container was not run in the authoring environment; the included checkpoint uses the runnable PyTorch implementation.
+- The MidiTok extension tokenizes and profiles the data; it does not train or evaluate a Transformer model.
 
 ## Suggested next work
 
 1. Listen to the MusicGen WAV and three symbolic takes, then record human scores using `EVALUATION.md`.
 2. Compare LSTM temperatures while holding the six-file corpus, checkpoint, tick count, and seed fixed; save each recipe.
-3. Consider event-based or duration-aware MIDI encodings as a separately documented follow-up while keeping this reference-compatible baseline intact.
-
+3. Keep the MidiTok event-token audit as a representation comparison. Consider Transformer training only after increasing and curating the licensed corpus; six scores are too small for a credible modern-model comparison.
