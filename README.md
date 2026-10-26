@@ -1,121 +1,99 @@
-# Boogie-Woogie Music Generation
+# Boogie-Woogie MusicGen
 
-An applied generative-music project with two inspectable AI workflows: text-conditioned MusicGen audio inference, and a custom character-level PyTorch LSTM trained on Boogie-Woogie MIDI. It also compares the reference-compatible character stream with a modern event-based MIDI tokenization. The symbolic pipeline follows the MIDI → text → recurrent model → MIDI approach in [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), adapted to a small Boogie-Woogie dataset with an auditable source manifest.
+I wanted to make an AI-music project you can listen to and inspect. This repo has two experiments: a pretrained model turns a written prompt into audio, and a small model learns note patterns from MIDI and generates a new MIDI clip.
 
-> **Listen to the MusicGen take:** [4-second WAV](outputs/boogie-woogie-demo.wav) · [generation recipe](outputs/boogie-woogie-demo.json).  
-> **Inspect a symbolic-RNN output:** [generated MIDI](outputs/symbolic/boogie-rnn-demo-000.mid) · [generated text](outputs/symbolic/boogie-rnn-demo.txt) · [generation recipe](outputs/symbolic/boogie-rnn-demo.json).
-> **Compare three symbolic seeds:** [seed 73 MIDI](outputs/symbolic/boogie-rnn-seed-073-000.mid) · [seed 74 MIDI](outputs/symbolic/boogie-rnn-seed-074-000.mid) · [seed 75 MIDI](outputs/symbolic/boogie-rnn-seed-075-000.mid) · [metrics and SHA-256 hashes](outputs/symbolic/evaluation.json).
-> **Inspect the modern tokenization audit:** [MidiTok REMI report](outputs/symbolic/remi-token-audit.json).
+Both are short experiments, not finished songs. The MIDI model learns from just six scores, so I keep the data, settings, outputs, and limitations visible.
 
-The audio and MIDI examples are short musical clips, not complete songs.
+## Have a listen
 
-## Two generation paths
+- **MusicGen:** [play the 4-second WAV](outputs/boogie-woogie-demo.wav) · [see the prompt and settings](outputs/boogie-woogie-demo.json)
+- **MIDI model:** [open a generated MIDI](outputs/symbolic/boogie-rnn-demo-000.mid) · [see the note stream](outputs/symbolic/boogie-rnn-demo.txt) · [see its settings](outputs/symbolic/boogie-rnn-demo.json)
+- **Three more MIDI takes:** [seed 73](outputs/symbolic/boogie-rnn-seed-073-000.mid) · [seed 74](outputs/symbolic/boogie-rnn-seed-074-000.mid) · [seed 75](outputs/symbolic/boogie-rnn-seed-075-000.mid)
 
-| Path | Model and data | Output | What it demonstrates |
-| --- | --- | --- | --- |
-| MusicGen | Pretrained `facebook/musicgen-small`; written style prompt | WAV audio | Prompt design, model inference, sampling controls, and generation metadata |
-| Symbolic RNN | PyTorch character LSTM trained on six curated PDMX MIDI files | MIDI plus decoded text/CSV | Python data audit, Type-0 conversion, MIDI-to-text encoding, model training, sampling, and MIDI reconstruction |
+## Make a short audio clip
 
-The symbolic route adopts the reference’s core representation: PPQN and tempo headers, one pitch character for each positive-velocity note-on, and spaces for MIDI tick slots. It uses Fourmilab `midicsv`/`csvmidi` where available. The repository also includes the original Torch7 `torch-rnn` Docker recipe for compatibility and a modern PyTorch LSTM that can be trained with the project’s Python environment. See [the full symbolic workflow](docs/SYMBOLIC_RNN_WORKFLOW.md) for exact details and deviations.
+Install Python 3.10+ and the MusicGen tools:
 
-For a second view of the same MIDI files, the optional [MidiTok REMI audit](docs/MODERN_TOKENIZATION.md) converts them into bar/position, pitch, velocity, duration, tempo, time-signature, and instrument tokens. This is a representation and data-analysis workflow; it does not claim to train a Transformer on the six-score corpus.
-
-MusicGen and the symbolic LSTM are separate experiments. MusicGen is pretrained and prompt-conditioned; the LSTM is trained here from symbolic MIDI and is not text-prompted. The project does not claim either model guarantees strict 12-bar form, exact tempo, or professional performance quality.
-
-## What is included
-
-- A prompt-driven MusicGen CLI and Gradio interface, with WAV plus JSON generation recipes.
-- Six source MIDI files with PDMX IDs, licenses, source paths, SHA-256 hashes, and parsed note statistics in [`data/manifest.csv`](data/manifest.csv).
-- Python scripts to normalize MIDI to Type 0, serialize MIDI through `midicsv`, train and sample a character LSTM, and decode generated text to MIDI CSV/MIDI.
-- A committed symbolic-RNN checkpoint, training-loss history, and three generated MIDI/text takes with per-run recipes.
-- A reproducible MIDI diagnostic script and [JSON comparison report](outputs/symbolic/evaluation.json) for the six source scores and three generated takes.
-- A modern MidiTok REMI tokenization report with source hashes, recorded tokenizer settings, per-file token counts and previews, plus a Mido cross-check of MIDI channels and note-on counts.
-- Documentation of the data selection, representation, model, tools, limitations, licenses, and reproducibility.
-
-The six-score corpus is a transparent portfolio-scale demonstration, not a broad or balanced Boogie-Woogie benchmark. PDMX records each selected item as CC0 with `license_conflict=False`; this is dataset metadata, not an independent legal determination. See [data provenance and model terms](docs/DATA_AND_MODEL.md).
-
-### Recorded symbolic run
-
-The committed corpus contains **6 MIDI files**, **672,098 tick slots**, **5,390 positive-velocity note-on events**, and **677,566 bytes** of processed text. The included CPU training run used 1,000 stochastic optimization steps (seed 42); its first and last minibatch cross-entropies were 4.2998 and 0.0480. Those are training-loss readings, not a held-out performance score. The three controlled symbolic samples are each 5 seconds at 480 PPQN and 120 BPM; their note-on counts are 38, 23, and 27. See the [evaluation notes](docs/EVALUATION.md) for the comparison and its limits. The checkpoint, training log, generated text, MIDI CSV, MIDI, and JSON recipes are in the repository so the runs can be inspected end to end.
-
-The MidiTok 3.1.0 audit records **25,158 REMI tokens** across the six source files, with **5,390 note tokens** matching the source note-on count under the saved configuration. It also makes one data caveat visible: `Blastin Boogie` is encoded on MIDI channel 10 and therefore represented as percussion tokens by MidiTok, while the reference character model ignores channels. See the [tokenization report](outputs/symbolic/remi-token-audit.json) and [data notes](docs/DATA_AND_MODEL.md).
-
-## Try it
-
-Use Python 3.10 or later. Choose the install for the path you want:
-
-```powershell
-py -3.11 -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
+```bash
+python -m pip install -e ".[musicgen]"
 ```
 
-| Use | Install command |
-| --- | --- |
-| Generate WAV audio from the command line | `python -m pip install -e ".[musicgen]"` |
-| Launch the audio prompt interface | `python -m pip install -e ".[musicgen,app]"` |
-| Generate or train symbolic MIDI | `python -m pip install -e ".[symbolic]"` |
-| Audit MIDI with modern event tokens | `python -m pip install -e ".[symbolic-modern]"` |
-| Install every project feature | `python -m pip install -e ".[musicgen,app,symbolic,symbolic-modern]"` |
+Then run:
 
-The MIDI-only extra declares PyTorch and Mido; it does not pull in the MusicGen Transformers stack or Gradio. A CUDA GPU makes MusicGen inference and LSTM training faster; CPU execution is supported. The first MusicGen run downloads its checkpoint from Hugging Face.
-
-Generate a WAV from the command line:
-
-```powershell
-boogie-woogie-generate `
-  --preset classic-honky-tonk `
-  --seconds 8 `
-  --seed 42 `
-  --output outputs/boogie-woogie-demo.wav
+```bash
+boogie-woogie-generate --preset classic-honky-tonk --seconds 8 --seed 42 --output outputs/my-take.wav
 ```
 
-Or launch the prompt studio:
+The first run downloads Meta's `facebook/musicgen-small` checkpoint. You can also write a prompt with `--prompt`, or launch the small web interface with `python -m pip install -e ".[musicgen,app]"` and `boogie-woogie-app`.
 
-```powershell
-boogie-woogie-app
+## Make a MIDI clip
+
+The MIDI model is trained on this project's six scores. The processed text corpus is already included, so you can train and sample without rebuilding it:
+
+```bash
+python -m pip install -e ".[symbolic]"
+python scripts/train_char_rnn.py --steps 1000 --seed 42
+python scripts/generate_char_rnn.py --ticks 4800 --seed 73
 ```
 
-The default model generates no more than 30 seconds per take. Short takes are easier to compare and are less likely to drift away from the requested groove. You can set a custom prompt with `--prompt`; it takes precedence over `--preset`.
+To rebuild the text corpus from the raw MIDI, install Fourmilab's `midicsv` and `csvmidi`, then run:
 
-## Train and generate symbolic MIDI
-
-The checked-in MIDI corpus is already preprocessed. To reproduce it from the raw MIDI files, install [Fourmilab MIDIcsv](https://www.fourmilab.ch/webtools/midicsv/) and run:
-
-```powershell
+```bash
 python scripts/normalize_type0.py
 python scripts/process.py --midicsv midicsv
 python scripts/train_char_rnn.py --steps 1000 --seed 42
 python scripts/generate_char_rnn.py --ticks 4800 --seed 73
-python scripts/unprocess.py outputs/symbolic/boogie-rnn-demo.txt `
-  --prefix boogie-rnn-demo --midi-backend csvmidi --csvmidi csvmidi
-python scripts/tokenize_corpus.py
+python scripts/unprocess.py outputs/symbolic/boogie-rnn-demo.txt --prefix boogie-rnn-demo --midi-backend csvmidi --csvmidi csvmidi
 ```
 
-Install `symbolic-modern` separately to run the MidiTok command. If `csvmidi` is unavailable, `unprocess.py` can write the MIDI with its Mido fallback. The original Dockerized Torch7 recipe and its commands are documented separately; the legacy container is not needed for the PyTorch run above.
+If `csvmidi` is not installed, the last command can use the Mido fallback. See [the full MIDI walkthrough](docs/SYMBOLIC_RNN_WORKFLOW.md) for the exact steps and the original Torch7 option.
 
-## Example prompt
+## How the two experiments work
 
-> Instrumental solo piano in a lively classic Boogie-Woogie style, steady swinging 12-bar blues feel, rolling walking left-hand bass, syncopated right-hand blues riffs and turnarounds, bright honky-tonk piano, intimate vintage club sound, no vocals.
+### Prompt to audio
 
-Text prompts guide the model; they do **not** lock an exact BPM, chord sequence, bar count, or arrangement. Listen to the result and treat the prompt as a creative brief, not a score.
+1. I describe the sound I want: piano, rolling bass, blues riffs, and a swinging feel.
+2. MusicGen turns that prompt into audio tokens and decodes them into a WAV file.
+3. The project saves the prompt and generation settings beside the audio, so each take can be checked or repeated.
 
-## How the MusicGen path works
+The prompt is a guide; it does not lock the tempo, chord changes, or 12-bar form.
 
-1. Select a style preset or write a prompt.
-2. Set duration, seed, temperature, top-k, and classifier-free guidance scale.
-3. The text encoder represents the prompt; MusicGen’s autoregressive Transformer samples audio-code tokens conditioned on that representation.
-4. The audio decoder reconstructs the sampled tokens into a waveform.
-5. The project saves PCM WAV audio and a JSON sidecar so another person can see how that take was produced.
+### MIDI to model to MIDI
 
-Read the [methodology](docs/METHODOLOGY.md), [symbolic RNN workflow](docs/SYMBOLIC_RNN_WORKFLOW.md), [modern MidiTok tokenization](docs/MODERN_TOKENIZATION.md), [data and model notes](docs/DATA_AND_MODEL.md), [reference-repository review](docs/REFERENCE_REVIEW.md), [evaluation plan](docs/EVALUATION.md), [reproducibility guide](docs/REPRODUCIBILITY.md), and [current scope and project status](docs/PROJECT_STATUS.md).
+1. I selected six Boogie-Woogie or blues-piano scores from PDMX v8 and recorded their source details and hashes.
+2. I merged each score into one MIDI track, then used `midicsv` to read its tempo, timing, and note events.
+3. I turned note pitches into characters on a tick grid; spaces mark ticks without a note.
+4. A PyTorch LSTM learned to predict the next character and sampled a new stream.
+5. I converted that stream back into MIDI so it can be opened, edited, or played.
 
-## Model and use terms
+This follows the MIDI → text → recurrent model → MIDI idea in [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann). The code and Boogie-Woogie data here are separate; no code or MIDI files were copied from that project. The reference's original Torch7 recipe is documented alongside our runnable PyTorch version.
 
-The project code is MIT-licensed. The `facebook/musicgen-small` model weights are released under **CC-BY-NC 4.0**, a non-commercial checkpoint. The symbolic training MIDI files have per-item license metadata recorded in the manifest. Model licenses and dataset metadata do not settle every question about generated outputs; see [LICENSE](LICENSE) and [docs/DATA_AND_MODEL.md](docs/DATA_AND_MODEL.md).
+## What is in the data
 
-## Acknowledgements
+The six MIDI files contain **5,390 note-on events** across **672,098 MIDI tick slots**. Their source records, license fields, file hashes, and processing counts are in [`data/manifest.csv`](data/manifest.csv) and [`data/processed/processing_manifest.csv`](data/processed/processing_manifest.csv).
 
-The symbolic pipeline was inspired by [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), an AGPL-3.0 experiment that turns ragtime MIDI into a character stream, trains a recurrent neural network, and converts generated streams back to MIDI. No code or MIDI files from that repository are copied here; this project independently implements the described method and uses a separate Boogie-Woogie dataset. See the [reference review](docs/REFERENCE_REVIEW.md) for a detailed analysis.
+PDMX marks the selected entries as CC0 with no recorded license conflict. Those fields are useful provenance, not a legal review; the dataset is also small and should not be treated as representative of the whole genre.
 
-MusicGen was introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284) and is distributed as part of [AudioCraft](https://github.com/facebookresearch/audiocraft).
+The saved LSTM run used 1,000 training steps. Its first and last minibatch losses were 4.2998 and 0.0480; these are training readings, not a held-out quality score. The three saved MIDI takes are five seconds long. The [evaluation report](outputs/symbolic/evaluation.json) compares their notes with the source scores.
+
+I also ran the same MIDI files through MidiTok's REMI tokenizer as a second look at the data. That produced **25,158 tokens** and **5,390 note tokens**; it is a tokenization audit, not a Transformer trained on this small corpus. The [report](outputs/symbolic/remi-token-audit.json) includes a channel detail: one source score is marked as percussion by MidiTok.
+
+## Project notes
+
+- [Data and model terms](docs/DATA_AND_MODEL.md) — where the scores and pretrained model come from, and what their licenses say.
+- [Methodology](docs/METHODOLOGY.md) — what happens in each generation path.
+- [MIDI workflow](docs/SYMBOLIC_RNN_WORKFLOW.md) — the reference method, its adaptation, and each conversion step.
+- [Reference review](docs/REFERENCE_REVIEW.md) — what I found in `rag-shenanigann` and what I carried forward.
+- [Evaluation](docs/EVALUATION.md) — what I measured and what those measurements can tell us.
+- [REMI tokenization](docs/MODERN_TOKENIZATION.md) — the optional modern MIDI representation and audit.
+- [Reproducibility](docs/REPRODUCIBILITY.md) — installs, commands, seeds, and saved run details.
+- [Current scope](docs/PROJECT_STATUS.md) — what works now and what I may try next.
+
+## A few things to know
+
+- MusicGen makes audio directly; the LSTM makes symbolic MIDI. They use different models and different inputs.
+- Neither path guarantees a convincing performance or a strict 12-bar blues structure.
+- The MusicGen weights are licensed **CC-BY-NC 4.0**. Project code is MIT-licensed; PDMX source records are listed in the data manifest.
+
+The MusicGen experiment uses Meta's [`facebook/musicgen-small`](https://huggingface.co/facebook/musicgen-small), introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284). The symbolic experiment is inspired by [`rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann).
+
