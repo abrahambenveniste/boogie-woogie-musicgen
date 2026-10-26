@@ -91,7 +91,7 @@ python scripts/train_char_rnn.py `
   --seed 42
 ```
 
-Sampling starts with the first corpus record's PPQN and tempo. The sampler restricts output to the source pitch characters and the space separator, preventing header digits or newline characters from being misread as notes. `--ticks` controls the generated number of tick slots; with 480 PPQN and 500,000 microseconds per quarter note, 4,800 slots correspond to 10 seconds.
+Sampling starts with the first corpus record's PPQN and tempo. The sampler restricts output to the source pitch characters and the space separator, preventing header digits or newline characters from being misread as notes. `--ticks` controls the generated number of tick slots; with 480 PPQN and 500,000 microseconds per quarter note, 4,800 slots correspond to 5 seconds.
 
 ```powershell
 python scripts/generate_char_rnn.py `
@@ -179,3 +179,4 @@ The checked-in training run used 1,000 optimization steps, 128-character windows
 - [Upstream `jcjohnson/torch-rnn`](https://github.com/jcjohnson/torch-rnn)
 - [CPU Docker image instructions](https://github.com/crisbal/docker-torch-rnn)
 - [PDMX dataset record](https://doi.org/10.5281/zenodo.14984509)
+

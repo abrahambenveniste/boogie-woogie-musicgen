@@ -72,6 +72,31 @@ This writes a `.csv` intermediate and calls `csvmidi -z` to produce the MIDI fil
 
 The generated MIDI is symbolic. To make a WAV rendering, open it in a DAW or use a local SoundFont renderer such as TiMidity++; the soundfont is a separate dependency and is not bundled here.
 
+## Reproduce the controlled seed comparison
+
+The committed comparison holds the checkpoint, 4,800 tick slots, temperature 1.0, CPU device, and Mido decoder fixed. Seeds 73, 74, and 75 produce separate five-second MIDI takes. For each seed, generate and decode a take; for example:
+
+```powershell
+python scripts/generate_char_rnn.py `
+  --checkpoint models/boogie-char-lstm.pt `
+  --output outputs/symbolic/boogie-rnn-seed-073.txt `
+  --ticks 4800 --temperature 1.0 --seed 73 --device cpu
+python scripts/unprocess.py outputs/symbolic/boogie-rnn-seed-073.txt `
+  --output-dir outputs/symbolic `
+  --prefix boogie-rnn-seed-073 --midi-backend mido
+```
+
+Repeat with seeds `74` and `75`, changing both the output/prefix suffix and `--seed`. Then recreate the metrics:
+
+```powershell
+python scripts/evaluate_symbolic.py `
+  --generated outputs/symbolic/boogie-rnn-seed-073-000.mid `
+  --generated outputs/symbolic/boogie-rnn-seed-074-000.mid `
+  --generated outputs/symbolic/boogie-rnn-seed-075-000.mid
+```
+
+The MIDI outputs are short examples, not complete songs. Random seeds do not guarantee identical files across all hardware or library versions; each run's JSON sidecar records its settings and environment.
+
 ## Legacy Torch7 route
 
 The exact historical workflow uses `crisbal/torch-rnn:base` and its upstream Torch7 `torch-rnn` checkout. See [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md) for `scripts/preprocess.py`, `th train.lua`, and `th sample.lua` commands. The Docker image is based on Ubuntu 14.04 and is not pinned to a modern, maintained software stack. Docker was unavailable in the authoring environment, so the committed model and generated MIDI use the modern PyTorch implementation instead.
@@ -92,3 +117,4 @@ boogie-woogie-generate `
 ```
 
 The first call downloads model weights. Runtime, waveform details, and sampling settings are written to the matching JSON sidecar. Text prompts do not hard-constrain musical form or exact notes.
+

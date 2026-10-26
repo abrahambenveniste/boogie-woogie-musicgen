@@ -1,9 +1,12 @@
 # Boogie-Woogie Music Generation
 
-An applied generative-music project with two inspectable AI workflows: text-conditioned MusicGen audio inference, and a custom character-level PyTorch LSTM trained on Boogie-Woogie MIDI. The symbolic pipeline follows the MIDI → text → recurrent model → MIDI approach, adapted to a small Boogie-Woogie dataset with an auditable source manifest.
+An applied generative-music project with two inspectable AI workflows: text-conditioned MusicGen audio inference, and a custom character-level PyTorch LSTM trained on Boogie-Woogie MIDI. The symbolic pipeline follows the MIDI → text → recurrent model → MIDI approach in [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), adapted to a small Boogie-Woogie dataset with an auditable source manifest.
 
 > **Listen to the MusicGen take:** [4-second WAV](outputs/boogie-woogie-demo.wav) · [generation recipe](outputs/boogie-woogie-demo.json).  
 > **Inspect a symbolic-RNN output:** [generated MIDI](outputs/symbolic/boogie-rnn-demo-000.mid) · [generated text](outputs/symbolic/boogie-rnn-demo.txt) · [generation recipe](outputs/symbolic/boogie-rnn-demo.json).
+> **Compare three symbolic seeds:** [seed 73 MIDI](outputs/symbolic/boogie-rnn-seed-073-000.mid) · [seed 74 MIDI](outputs/symbolic/boogie-rnn-seed-074-000.mid) · [seed 75 MIDI](outputs/symbolic/boogie-rnn-seed-075-000.mid) · [metrics and SHA-256 hashes](outputs/symbolic/evaluation.json).
+
+The audio and MIDI examples are short musical clips, not complete songs.
 
 ## Two generation paths
 
@@ -21,15 +24,15 @@ MusicGen and the symbolic LSTM are separate experiments. MusicGen is pretrained 
 - A prompt-driven MusicGen CLI and Gradio interface, with WAV plus JSON generation recipes.
 - Six source MIDI files with PDMX IDs, licenses, source paths, SHA-256 hashes, and parsed note statistics in [`data/manifest.csv`](data/manifest.csv).
 - Python scripts to normalize MIDI to Type 0, serialize MIDI through `midicsv`, train and sample a character LSTM, and decode generated text to MIDI CSV/MIDI.
-- A committed symbolic-RNN checkpoint, training-loss history, and generated MIDI/text example so visitors can inspect the training and output artifacts.
-- A reproducible MIDI diagnostic script and [JSON comparison report](outputs/symbolic/evaluation.json) for the six source scores and generated example.
+- A committed symbolic-RNN checkpoint, training-loss history, and three generated MIDI/text takes with per-run recipes.
+- A reproducible MIDI diagnostic script and [JSON comparison report](outputs/symbolic/evaluation.json) for the six source scores and three generated takes.
 - Documentation of the data selection, representation, model, tools, limitations, licenses, and reproducibility.
 
 The six-score corpus is a transparent portfolio-scale demonstration, not a broad or balanced Boogie-Woogie benchmark. PDMX records each selected item as CC0 with `license_conflict=False`; this is dataset metadata, not an independent legal determination. See [data provenance and model terms](docs/DATA_AND_MODEL.md).
 
 ### Recorded symbolic run
 
-The committed corpus contains **6 MIDI files**, **672,098 tick slots**, **5,390 positive-velocity note-on events**, and **677,566 bytes** of processed text. The included CPU training run used 1,000 stochastic optimization steps (seed 42); its first and last minibatch cross-entropy values were 4.2998 and 0.0480. Those are training-loss readings, not a held-out performance score. The included generated MIDI is 5 seconds at 480 PPQN and 120 BPM, with 38 decoded note-on events spanning pitches 28–77. The checkpoint, training log, generated text, MIDI CSV, MIDI, and JSON recipes are in the repository so the run can be inspected end to end.
+The committed corpus contains **6 MIDI files**, **672,098 tick slots**, **5,390 positive-velocity note-on events**, and **677,566 bytes** of processed text. The included CPU training run used 1,000 stochastic optimization steps (seed 42); its first and last minibatch cross-entropies were 4.2998 and 0.0480. Those are training-loss readings, not a held-out performance score. The three controlled symbolic samples are each 5 seconds at 480 PPQN and 120 BPM; their note-on counts are 38, 23, and 27. See the [evaluation notes](docs/EVALUATION.md) for the comparison and its limits. The checkpoint, training log, generated text, MIDI CSV, MIDI, and JSON recipes are in the repository so the runs can be inspected end to end.
 
 ## Try it
 
@@ -94,4 +97,10 @@ Read the [methodology](docs/METHODOLOGY.md), [symbolic RNN workflow](docs/SYMBOL
 ## Model and use terms
 
 The project code is MIT-licensed. The `facebook/musicgen-small` model weights are released under **CC-BY-NC 4.0**, a non-commercial checkpoint. The symbolic training MIDI files have per-item license metadata recorded in the manifest. Model licenses and dataset metadata do not settle every question about generated outputs; see [LICENSE](LICENSE) and [docs/DATA_AND_MODEL.md](docs/DATA_AND_MODEL.md).
+
+## Acknowledgements
+
+The symbolic pipeline was inspired by [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), an AGPL-3.0 experiment that turns ragtime MIDI into a character stream, trains a recurrent neural network, and converts generated streams back to MIDI. No code or MIDI files from that repository are copied here; this project independently implements the described method and uses a separate Boogie-Woogie dataset. See the [reference review](docs/REFERENCE_REVIEW.md) for a detailed analysis.
+
+MusicGen was introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284) and is distributed as part of [AudioCraft](https://github.com/facebookresearch/audiocraft).
 

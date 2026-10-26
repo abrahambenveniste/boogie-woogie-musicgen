@@ -14,8 +14,8 @@
 - Six PDMX v8 source MIDI files with source IDs, per-item license fields, no-conflict flags, file hashes, and source/local note counts.
 - Python/Mido Type-0 normalization, actual `midicsv` parsing, deterministic character-corpus generation, per-file processing metrics, and `csvmidi`-based decode.
 - A PyTorch character LSTM training and sampling implementation, plus the legacy Torch7 Docker training recipe.
-- A generated symbolic MIDI/text example, training checkpoint and metadata, and a per-step cross-entropy log.
-- A reproducible Mido-based MIDI diagnostics script and a committed JSON comparison of the six source scores with the generated example.
+- Three controlled symbolic MIDI takes from seeds 73, 74, and 75, with text, MIDI CSV, MIDI, and per-run metadata.
+- A reproducible Mido-based MIDI diagnostics script and a committed JSON comparison of the six source scores with all three generated takes.
 - Documentation for both model paths, corpus curation and licenses, exact representation, tool roles, limitations, and reproducibility.
 
 ## Not claimed
@@ -28,7 +28,7 @@
 
 ## Suggested next work
 
-1. Listen to the MusicGen WAV and generated MIDI rendering, then record human scores using `EVALUATION.md`.
-2. Compare sampling settings while holding the six-file corpus and trained checkpoint fixed; save each seed and generation recipe.
+1. Listen to the MusicGen WAV and three symbolic takes, then record human scores using `EVALUATION.md`.
+2. Compare LSTM temperatures while holding the six-file corpus, checkpoint, tick count, and seed fixed; save each recipe.
 3. Consider event-based or duration-aware MIDI encodings as a separately documented follow-up while keeping this reference-compatible baseline intact.
 

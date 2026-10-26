@@ -18,7 +18,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", type=Path, default=Path("models/boogie-char-lstm.pt"))
     parser.add_argument("--output", type=Path, default=Path("outputs/symbolic/boogie-rnn-demo.txt"))
-    parser.add_argument("--ticks", type=int, default=4800, help="Tick slots to generate (4800 is 10s at 120 BPM and 480 PPQN).")
+    parser.add_argument("--ticks", type=int, default=4800, help="Tick slots to generate (4800 is 5s at 120 BPM and 480 PPQN).")
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=73)
     parser.add_argument("--device", default="auto", choices=("auto", "cpu", "cuda"))
@@ -113,3 +113,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

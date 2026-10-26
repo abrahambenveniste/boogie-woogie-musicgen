@@ -98,6 +98,39 @@ def midi_metrics(path: Path) -> dict[str, Any]:
     }
 
 
+def generation_provenance(midi_path: Path) -> dict[str, Any] | None:
+    decoder_recipe_path = midi_path.with_suffix(".json")
+    if not decoder_recipe_path.is_file():
+        return None
+    decoder_recipe = json.loads(decoder_recipe_path.read_text(encoding="utf-8"))
+    source_text = Path(decoder_recipe["source_text"])
+    source_candidates = [source_text] if source_text.is_absolute() else [ROOT / source_text, Path.cwd() / source_text]
+    generation_recipe_path = next(
+        (candidate.with_suffix(".json") for candidate in source_candidates if candidate.with_suffix(".json").is_file()),
+        None,
+    )
+    generation_recipe = (
+        json.loads(generation_recipe_path.read_text(encoding="utf-8")) if generation_recipe_path else {}
+    )
+    parameter_keys = (
+        "seed",
+        "temperature",
+        "requested_tick_slots",
+        "ppqn",
+        "tempo_us_per_quarter",
+        "device",
+        "torch_version",
+        "checkpoint_sha256",
+        "corpus_sha256",
+    )
+    return {
+        "decoder_recipe_file": repo_path(decoder_recipe_path),
+        "decoder": decoder_recipe.get("decoder"),
+        "generation_recipe_file": repo_path(generation_recipe_path) if generation_recipe_path else None,
+        "generation_parameters": {key: generation_recipe[key] for key in parameter_keys if key in generation_recipe},
+    }
+
+
 def pitch_ngram_overlap(generated: list[int], sources: list[list[int]], size: int = 8) -> dict[str, Any]:
     source_ngrams = {
         tuple(sequence[index : index + size])
@@ -120,23 +153,35 @@ def pitch_ngram_overlap(generated: list[int], sources: list[list[int]], size: in
     }
 
 
-def build_report(source_dir: Path, generated_path: Path) -> dict[str, Any]:
+def build_report(source_dir: Path, generated_paths: list[Path]) -> dict[str, Any]:
     source_paths = sorted(
         path for path in source_dir.iterdir() if path.is_file() and path.suffix.lower() in {".mid", ".midi"}
     )
     if not source_paths:
         raise ValueError(f"No MIDI files found in {source_dir}")
-    if not generated_path.is_file():
-        raise FileNotFoundError(f"Generated MIDI not found: {generated_path}")
+    if not generated_paths:
+        raise ValueError("Provide at least one generated MIDI file")
+    for path in generated_paths:
+        if not path.is_file():
+            raise FileNotFoundError(f"Generated MIDI not found: {path}")
 
     sources = [midi_metrics(path) for path in source_paths]
-    generated = midi_metrics(generated_path)
+    generated_files = []
+    for path in generated_paths:
+        generated = midi_metrics(path)
+        overlap = pitch_ngram_overlap(
+            generated["pitch_event_sequence"],
+            [source["pitch_event_sequence"] for source in sources],
+        )
+        generated["pitch_ngram_overlap_with_sources"] = overlap
+        generated["generation_provenance"] = generation_provenance(path)
+        generated_files.append(generated)
     all_source_pitches = [
         pitch for source in sources for pitch in source["pitch_event_sequence"]
     ]
     source_rates = [source["note_on_events_per_second"] for source in sources if source["note_on_events_per_second"] is not None]
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "method": "Descriptive MIDI note-on diagnostics computed with Mido using the same parser for source and generated files.",
         "source_files": sources,
         "source_collection_summary": {
@@ -150,11 +195,7 @@ def build_report(source_dir: Path, generated_path: Path) -> dict[str, Any]:
             if source_rates
             else None,
         },
-        "generated_file": generated,
-        "generated_pitch_ngram_overlap_with_sources": pitch_ngram_overlap(
-            generated["pitch_event_sequence"],
-            [source["pitch_event_sequence"] for source in sources],
-        ),
+        "generated_files": generated_files,
         "interpretation": [
             "These measurements describe MIDI files; they do not measure musical quality, genre authenticity, originality, or listener preference.",
             "Pitch-event n-gram overlap is a narrow exact-sequence diagnostic, not a plagiarism or originality test.",
@@ -163,18 +204,24 @@ def build_report(source_dir: Path, generated_path: Path) -> dict[str, Any]:
     }
     for source in sources:
         source.pop("pitch_event_sequence")
-    generated.pop("pitch_event_sequence")
+    for generated in generated_files:
+        generated.pop("pitch_event_sequence")
     return report
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sources", type=Path, default=DEFAULT_SOURCES, help="Directory of source MIDI files")
-    parser.add_argument("--generated", type=Path, default=DEFAULT_GENERATED, help="Generated MIDI file to compare")
+    parser.add_argument(
+        "--generated",
+        type=Path,
+        action="append",
+        help="Generated MIDI file to compare; repeat this option to compare multiple takes",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="JSON report destination")
     args = parser.parse_args()
 
-    report = build_report(args.sources, args.generated)
+    report = build_report(args.sources, args.generated or [DEFAULT_GENERATED])
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"Wrote {repo_path(args.output)}")

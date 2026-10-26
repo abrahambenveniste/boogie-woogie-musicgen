@@ -1,0 +1,25 @@
+{
+  "source_text": "outputs/symbolic/boogie-rnn-seed-074.txt",
+  "source_text_sha256": "25dda8fda9b2bf4624dc460aa1dd4c3d5c542324db24644745b6228d554c9b8a",
+  "record_index": 0,
+  "csv_file": "outputs/symbolic/boogie-rnn-seed-074-000.csv",
+  "csv_sha256": "e96121b2fd3bd62cc0811208d96df5d11ecb2881b990a688d4e554472f83e57e",
+  "midi_file": "outputs/symbolic/boogie-rnn-seed-074-000.mid",
+  "midi_sha256": "970beb416228e6b36df27d98662fac835048ad0370609fee21311cafb141f4ca",
+  "decoder": "mido",
+  "csvmidi_version_label": null,
+  "csvmidi_executable_sha256": null,
+  "format": 0,
+  "tracks": 1,
+  "ppqn": 480,
+  "tempo_us_per_quarter": 500000,
+  "tick_slots": 4800,
+  "positive_velocity_note_on_events": 23,
+  "pitch_range": [
+    28,
+    86
+  ],
+  "duration_seconds": 5.0,
+  "python_version": "3.13.15"
+}
+

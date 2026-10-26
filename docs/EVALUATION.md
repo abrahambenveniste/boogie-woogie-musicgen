@@ -2,25 +2,36 @@
 
 ## Current status
 
-The repository contains one MusicGen WAV and one symbolic-RNN MIDI demonstration with its recipes and training log. They show that both pipelines run; they are not benchmark results. No structured listener scores are claimed.
+The repository contains one MusicGen WAV and three controlled symbolic-RNN MIDI takes with recipes and a shared diagnostic report. They show that both pipelines run and that the symbolic output changes with the random seed; they are not benchmark results. No structured listener scores are claimed.
 
 ## Reproducible MIDI diagnostics
 
-`scripts/evaluate_symbolic.py` computes descriptive metrics for every MIDI file in `data/normalized_midi/` and the committed generated MIDI with the same Mido parser. Recreate the snapshot with:
+`scripts/evaluate_symbolic.py` computes descriptive metrics for every MIDI file in `data/normalized_midi/` and one or more generated MIDI files with the same Mido parser. Recreate the committed three-take snapshot with:
 
 ```powershell
-python scripts/evaluate_symbolic.py
+python scripts/evaluate_symbolic.py `
+  --generated outputs/symbolic/boogie-rnn-seed-073-000.mid `
+  --generated outputs/symbolic/boogie-rnn-seed-074-000.mid `
+  --generated outputs/symbolic/boogie-rnn-seed-075-000.mid
 ```
 
-The JSON report is saved to [`outputs/symbolic/evaluation.json`](../outputs/symbolic/evaluation.json). It records per-file SHA-256 hashes, MIDI type, PPQN, tempo changes, duration, positive-velocity note-on count and density, pitch histogram and range, adjacent pitch-event intervals, onset-tick occupancy, and exact 8-note pitch-event n-gram overlap against the six source files.
+The JSON report is saved to [`outputs/symbolic/evaluation.json`](../outputs/symbolic/evaluation.json). It records per-file SHA-256 hashes, MIDI type, PPQN, tempo changes, duration, positive-velocity note-on count and density, pitch histogram and range, adjacent pitch-event intervals, onset-tick occupancy, exact 8-note pitch-event n-gram overlap against the six source files, and each generated take's seed, temperature, checkpoint hash, and decoder recipe.
 
 The n-gram diagnostic follows chronological note-on event order; ordering of simultaneous notes follows the parser's event order. A match only means an exact short pitch sequence occurs in both files. None of these metrics measures quality, authenticity, originality, plagiarism, or listener preference. Use them alongside the listening protocol below.
 
-In the committed snapshot, the six source files contain 5,390 positive-velocity note-on events in total, with a median file density of 7.562309 events/second. The generated example contains 38 such events at 7.6 events/second, spans MIDI pitches 28–77, and has no exact 8-event pitch windows in common with the sources under this definition. The zero overlap is only a property of this one diagnostic and does not establish originality.
+The three symbolic takes use the same checkpoint, 4,800 tick slots (5 seconds at the stored 480 PPQN and 120 BPM), temperature 1.0, and Mido decoder. Only the random seed changes. The six source files contain 5,390 positive-velocity note-on events in total, with a median file density of 7.562309 events/second.
+
+| Seed | Note-on events | Events/second | MIDI pitch range | Exact 8-event windows shared with sources |
+| ---: | ---: | ---: | ---: | ---: |
+| 73 | 38 | 7.6 | 28–77 | 0 / 31 |
+| 74 | 23 | 4.6 | 28–86 | 0 / 16 |
+| 75 | 27 | 5.4 | 36–81 | 0 / 20 |
+
+The density and pitch range vary across these three samples. This is descriptive evidence of seed-dependent variation, not evidence of musical quality. The zero exact-window overlap is only a property of this narrow diagnostic and does not establish originality.
 
 ## Listening protocol
 
-For a small exploratory listening study, generate three takes per method with a documented seed list. Randomize the playback order and ask listeners to score from 1 (weak) to 5 (strong):
+For a small exploratory listening study, use the three committed symbolic takes and generate three MusicGen takes with a documented seed list. Randomize playback order within each method and ask listeners to score from 1 (weak) to 5 (strong):
 
 | Criterion | Listening question |
 | --- | --- |
@@ -44,7 +55,7 @@ These measurements should be calculated on source and generated MIDI with the sa
 
 ## Controlled comparisons
 
-- Compare a small range of LSTM temperatures while holding the checkpoint, tick budget, and seed fixed.
+- Compare a small range of LSTM temperatures while holding the checkpoint, tick budget, and seed fixed; the committed baseline holds temperature at 1.0 and varies seeds 73, 74, and 75.
 - Compare a minimal MusicGen prompt against the full left-hand/right-hand groove brief, with duration and seed fixed.
 - Keep symbolic LSTM and MusicGen results in separate groups; their data, conditioning, output format, and learned task differ, so they are not a direct apples-to-apples model benchmark.
 
