@@ -16,6 +16,7 @@
 - A PyTorch character LSTM training and sampling implementation, plus the legacy Torch7 Docker training recipe.
 - Three controlled symbolic MIDI takes from seeds 73, 74, and 75, with text, MIDI CSV, MIDI, and per-run metadata.
 - A reproducible Mido-based MIDI diagnostics script and a committed JSON comparison of the six source scores with all three generated takes.
+- A fresh public checkout reproduced an additional five-second symbolic MIDI take using the available Python environment; dependency installation from a blank environment remains unverified.
 - Documentation for both model paths, corpus curation and licenses, exact representation, tool roles, limitations, and reproducibility.
 
 ## Not claimed

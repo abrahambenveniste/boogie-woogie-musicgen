@@ -43,6 +43,17 @@ For a small exploratory listening study, use the three committed symbolic takes 
 
 For MusicGen, also score prompt adherence. For the symbolic RNN, compare the generated MIDI with the training scores in a piano roll and record pitch range, event density, note lengths reconstructed by the decoder, and repetition. Keep the MusicGen prompt/JSON and RNN MIDI/text/JSON/checkpoint hash together. Record the listener, date, playback setup, model settings, and individual scores; report sample count and median or range rather than a broad claim.
 
+### Blank score sheet
+
+Fill this in only after listening. Use 1 (weak) to 5 (strong); prompt adherence applies only to MusicGen. Render the MIDI takes with the same piano sound for a fair within-method comparison.
+
+| Listener | Date | Sample | Style fit | Groove | Coherence | Variety | Artifacts | Prompt adherence | Comments |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+|  |  | MusicGen WAV |  |  |  |  |  |  |  |
+|  |  | Symbolic seed 73 |  |  |  |  |  | n/a |  |
+|  |  | Symbolic seed 74 |  |  |  |  |  | n/a |  |
+|  |  | Symbolic seed 75 |  |  |  |  |  | n/a |  |
+
 ## Symbolic diagnostics
 
 The RNN is trained on only six scores, so these simple diagnostics are exploratory and not sufficient measures of musical quality. The report already includes pitch range/histograms, event density, adjacent intervals, onset-tick occupancy, and pitch n-gram overlap. Future extensions can add:

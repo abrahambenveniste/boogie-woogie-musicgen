@@ -97,6 +97,10 @@ python scripts/evaluate_symbolic.py `
 
 The MIDI outputs are short examples, not complete songs. Random seeds do not guarantee identical files across all hardware or library versions; each run's JSON sidecar records its settings and environment.
 
+## Fresh-checkout smoke check
+
+On 2026-10-26, a fresh shallow clone of the public repository generated, decoded, and evaluated another five-second Type-0 MIDI take (seed 76). This used the already-installed local Python environment (Python 3.13.15 and CPU PyTorch 2.14.1); it confirms the committed checkout, checkpoint, and symbolic scripts work together. It did not reinstall dependencies into an empty environment, so it is not a clean-install test. The symbolic workflow did not download MusicGen weights.
+
 ## Legacy Torch7 route
 
 The exact historical workflow uses `crisbal/torch-rnn:base` and its upstream Torch7 `torch-rnn` checkout. See [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md) for `scripts/preprocess.py`, `th train.lua`, and `th sample.lua` commands. The Docker image is based on Ubuntu 14.04 and is not pinned to a modern, maintained software stack. Docker was unavailable in the authoring environment, so the committed model and generated MIDI use the modern PyTorch implementation instead.
