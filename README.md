@@ -95,9 +95,3 @@ Read the [methodology](docs/METHODOLOGY.md), [symbolic RNN workflow](docs/SYMBOL
 
 The project code is MIT-licensed. The `facebook/musicgen-small` model weights are released under **CC-BY-NC 4.0**, a non-commercial checkpoint. The symbolic training MIDI files have per-item license metadata recorded in the manifest. Model licenses and dataset metadata do not settle every question about generated outputs; see [LICENSE](LICENSE) and [docs/DATA_AND_MODEL.md](docs/DATA_AND_MODEL.md).
 
-## Acknowledgements
-
-The symbolic pipeline was inspired by [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), an AGPL-3.0 experiment that turns ragtime MIDI into a character stream, trains a recurrent neural network, and converts generated streams back to MIDI. No code or MIDI files from that repository are copied here; this project independently implements the described method and uses a separate Boogie-Woogie dataset. See the [reference review](docs/REFERENCE_REVIEW.md) for a detailed analysis.
-
-MusicGen was introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284) and is distributed as part of [AudioCraft](https://github.com/facebookresearch/audiocraft).
-
