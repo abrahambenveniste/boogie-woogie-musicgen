@@ -1,5 +1,7 @@
 # Project status
 
+In one line: this page says what runs now, what stays fixed for the baseline, and what could come next.
+
 ## Current scope decision
 
 - Keep the symbolic training corpus fixed at the six source MIDI files listed in `data/manifest.csv` for this baseline. This is the project owner's chosen scope, not a claim that six pieces represent the full genre.
@@ -34,3 +36,4 @@
 1. Listen to the MusicGen WAV and three symbolic takes, then record human scores using `EVALUATION.md`.
 2. Compare LSTM temperatures while holding the six-file corpus, checkpoint, tick count, and seed fixed; save each recipe.
 3. Keep the MidiTok event-token audit as a representation comparison. Consider Transformer training only after increasing and curating the licensed corpus; six scores are too small for a credible modern-model comparison.
+

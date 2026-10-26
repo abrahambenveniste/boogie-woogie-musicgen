@@ -1,5 +1,7 @@
 # Evaluation plan
 
+In one line: these repeatable note-level measurements describe the MIDI files; they do not score musical quality.
+
 ## Current status
 
 The repository contains one MusicGen WAV and three controlled symbolic-RNN MIDI takes with recipes and a shared diagnostic report. They show that both pipelines run and that the symbolic output changes with the random seed; they are not benchmark results. No structured listener scores are claimed.
@@ -73,3 +75,4 @@ These measurements should be calculated on source and generated MIDI with the sa
 - Keep symbolic LSTM and MusicGen results in separate groups; their data, conditioning, output format, and learned task differ, so they are not a direct apples-to-apples model benchmark.
 
 Do not state that an output follows exact BPM, 12-bar form, chord progression, or hand pattern unless that property is independently inspected from the generated audio or MIDI.
+

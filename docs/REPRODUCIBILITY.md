@@ -1,5 +1,7 @@
 # Reproducibility and operation
 
+In one line: use these installs, commands, and saved run settings to recreate the project's examples.
+
 ## Python environment
 
 Use Python 3.10 or newer. Install only the dependencies for the workflow you plan to run:
@@ -129,3 +131,4 @@ boogie-woogie-generate `
 ```
 
 The first call downloads model weights. Runtime, waveform details, and sampling settings are written to the matching JSON sidecar. Text prompts do not hard-constrain musical form or exact notes.
+

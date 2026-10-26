@@ -1,5 +1,7 @@
 # Data and model provenance
 
+In one line: this page tracks where the MIDI files and pretrained model came from, and what their recorded terms do and do not tell us.
+
 This repository has two model paths with different data and rights profiles. The MusicGen checkpoint is pretrained outside this project. The character LSTM checkpoint is trained here on the six MIDI files listed in [`data/manifest.csv`](../data/manifest.csv).
 
 ## Symbolic MIDI training data
@@ -47,3 +49,4 @@ The project does not make a blanket rights claim over MusicGen audio or generate
 ## Project code and dependencies
 
 The original code in this repository is under the MIT license. Fourmilab MIDICSV, Mido, PyTorch, Transformers, MusicGen, MidiTok, Symusic, and Hugging Face `tokenizers` are separate upstream projects with their own licenses. The REMI audit uses MidiTok and Symusic for event tokenization, and Mido to independently profile raw MIDI tracks and channels; it does not train a Hugging Face BPE/Unigram/WordPiece tokenizer. `torch-rnn` is included only as an optional documented reproduction path; no Torch7 source code is vendored here. See [`LICENSE`](../LICENSE), [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md), and [`MODERN_TOKENIZATION.md`](MODERN_TOKENIZATION.md) for tool roles and version caveats.
+

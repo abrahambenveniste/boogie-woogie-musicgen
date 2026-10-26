@@ -60,11 +60,11 @@ The prompt is a guide; it does not lock the tempo, chord changes, or 12-bar form
 
 ### MIDI to model to MIDI
 
-1. I selected six Boogie-Woogie or blues-piano scores from PDMX v8 and recorded their source details and hashes.
-2. I merged each score into one MIDI track, then used `midicsv` to read its tempo, timing, and note events.
-3. I turned note pitches into characters on a tick grid; spaces mark ticks without a note.
+1. The corpus uses six Boogie-Woogie or blues-piano scores from PDMX v8, with source details and file hashes recorded.
+2. A conversion script merges each score into one MIDI track; `midicsv` reads its tempo, timing, and note events.
+3. The processing script turns note pitches into characters on a tick grid; spaces mark ticks without a note.
 4. A PyTorch LSTM learned to predict the next character and sampled a new stream.
-5. I converted that stream back into MIDI so it can be opened, edited, or played.
+5. A decoder converts that stream back into MIDI so it can be opened, edited, or played.
 
 This follows the MIDI → text → recurrent model → MIDI idea in [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann). The code and Boogie-Woogie data here are separate; no code or MIDI files were copied from that project. The reference's original Torch7 recipe is documented alongside our runnable PyTorch version.
 
@@ -76,7 +76,7 @@ PDMX marks the selected entries as CC0 with no recorded license conflict. Those 
 
 The saved LSTM run used 1,000 training steps. Its first and last minibatch losses were 4.2998 and 0.0480; these are training readings, not a held-out quality score. The three saved MIDI takes are five seconds long. The [evaluation report](outputs/symbolic/evaluation.json) compares their notes with the source scores.
 
-I also ran the same MIDI files through MidiTok's REMI tokenizer as a second look at the data. That produced **25,158 tokens** and **5,390 note tokens**; it is a tokenization audit, not a Transformer trained on this small corpus. The [report](outputs/symbolic/remi-token-audit.json) includes a channel detail: one source score is marked as percussion by MidiTok.
+I added a second view of the MIDI files with MidiTok's REMI tokenizer. It produced **25,158 tokens** and **5,390 note tokens**; it is a tokenization audit, not a Transformer trained on this small corpus. The [report](outputs/symbolic/remi-token-audit.json) includes a channel detail: one source score is marked as percussion by MidiTok.
 
 ## Project notes
 

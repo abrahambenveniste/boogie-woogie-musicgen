@@ -1,5 +1,7 @@
 # Reference repository review: `s-zeng/rag-shenanigann`
 
+In one line: this review traces the reference pipeline and shows which ideas this project follows, adapts, and leaves out.
+
 Reviewed repository: [github.com/s-zeng/rag-shenanigann](https://github.com/s-zeng/rag-shenanigann), default branch `master`. The repository describes experiments in automated ragtime composition. “Rag” here means ragtime; this is not retrieval-augmented generation (RAG).
 
 ## Contents and stated stack
@@ -58,3 +60,4 @@ The first version of this project used only prompt-conditioned MusicGen audio in
 The project keeps MusicGen as a separate modern audio-generation path. The two models have different conditioning and outputs: MusicGen accepts text prompts and emits WAV; the symbolic LSTM learns a small MIDI corpus and emits a note stream/MIDI, with no natural-language prompt interface. The Boogie-Woogie corpus and source manifest are new. No reference code, MIDI files, or preprocessed training corpus are copied into this project.
 
 The new implementation also corrects the reference decoder's timing and note closure: it uses the tick-slot index rather than the character offset as MIDI time and emits note-offs for the final group before end-of-track. It still cannot recover note durations because the training representation discarded note-off events.
+

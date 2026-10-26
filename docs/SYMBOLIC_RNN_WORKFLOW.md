@@ -1,5 +1,7 @@
 # Symbolic MIDI-to-RNN workflow
 
+In one line: follow a score from its MIDI file through text conversion and LSTM sampling back to a playable MIDI file.
+
 This document records the Boogie-Woogie adaptation of the symbolic workflow in [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann). The goal is to make every stage inspectable: source MIDI, format conversion, textual encoding, model training, sampling, and MIDI reconstruction.
 
 ## Pipeline at a glance

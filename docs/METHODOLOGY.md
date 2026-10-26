@@ -1,5 +1,7 @@
 # Methodology
 
+In one line: I use MusicGen for prompt-led audio sketches and a small LSTM to explore note patterns learned from MIDI.
+
 This repository contains two distinct generation experiments. The first uses a pretrained text-to-audio model. The second trains a small symbolic music model from MIDI in this repository using the method described in `s-zeng/rag-shenanigann`.
 
 ## Track A: prompt-conditioned MusicGen audio
@@ -36,3 +38,4 @@ The reference decoder uses character-string offsets for event times, so chord wi
 ## Evaluation
 
 The MusicGen sample is a pipeline demonstration. The symbolic LSTM sample is a generated MIDI continuation with a recorded seed, temperature, checkpoint hash, corpus hash, PPQN, tempo, and requested tick count. Neither is a benchmark. See [`EVALUATION.md`](EVALUATION.md) for a listening and inspection protocol that separates prompt/style fit, rhythmic behavior, form, output validity, and limitations.
+

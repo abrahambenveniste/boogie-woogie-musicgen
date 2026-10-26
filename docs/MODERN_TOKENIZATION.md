@@ -1,5 +1,7 @@
 # Modern MIDI event tokenization
 
+In one line: this optional audit gives the same MIDI files a modern event-token view that can be compared with the character stream.
+
 ## Purpose
 
 This optional workflow adds a modern, inspectable representation alongside the reference-compatible character stream. It uses [MidiTok](https://github.com/Natooz/MidiTok) and its REMI tokenization to turn the same normalized MIDI files into events suitable for Transformer-style symbolic-music workflows.
@@ -49,3 +51,4 @@ This audit is data profiling and tokenizer exploration, not model training. It m
 - MidiTok [documentation](https://miditok.readthedocs.io/en/latest/) and [REMI tokenization description](https://miditok.readthedocs.io/en/latest/tokenizations.html).
 - Fradet et al. (2021), [“MidiTok: A Python package for MIDI file tokenization”](https://archives.ismir.net/ismir2021/latebreaking/000005.pdf).
 - Huang and Yang (2020), [“Pop Music Transformer: Beat-based Modeling and Generation of Expressive Pop Piano Compositions”](https://arxiv.org/abs/2002.00212).
+
