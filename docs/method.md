@@ -45,7 +45,7 @@ python scripts/train_char_rnn.py --steps 1000 --seed 42
 
 - **Mido:** parse, merge, normalize, and write MIDI.
 - **PyTorch:** train and sample the local character LSTM.
-- **MusicGen via Transformers:** generate prompt-conditioned WAV with Meta's pretrained `facebook/musicgen-small`. This model is not trained on the nine MIDI files; its weights are downloaded separately and licensed CC-BY-NC 4.0. See [`MODEL_NOTICE.md`](../MODEL_NOTICE.md).
+- **MusicGen via Transformers:** generate prompt-conditioned WAV with Meta's pretrained `facebook/musicgen-small`. This model is not trained on the nine MIDI files; its weights are downloaded separately and licensed CC-BY-NC 4.0. Review the [official model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md) before reuse.
 - **MidiTok (optional):** tokenize source and generated MIDI as REMI events for a representation audit. [`scripts/tokenize_corpus.py`](../scripts/tokenize_corpus.py) does not train a Transformer. Refresh [`remi-token-audit.json`](../outputs/symbolic/remi-token-audit.json) before using its counts as a current nine-score comparison.
 
 The source papers and dataset:
