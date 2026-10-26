@@ -88,7 +88,7 @@ Text prompts guide the model; they do **not** lock an exact BPM, chord sequence,
 4. The audio decoder reconstructs the sampled tokens into a waveform.
 5. The project saves PCM WAV audio and a JSON sidecar so another person can see how that take was produced.
 
-Read the [methodology](docs/METHODOLOGY.md), [symbolic RNN workflow](docs/SYMBOLIC_RNN_WORKFLOW.md), [data and model notes](docs/DATA_AND_MODEL.md), [reference-repository review](docs/REFERENCE_REVIEW.md), [evaluation plan](docs/EVALUATION.md), and [reproducibility guide](docs/REPRODUCIBILITY.md).
+Read the [methodology](docs/METHODOLOGY.md), [symbolic RNN workflow](docs/SYMBOLIC_RNN_WORKFLOW.md), [data and model notes](docs/DATA_AND_MODEL.md), [reference-repository review](docs/REFERENCE_REVIEW.md), [evaluation plan](docs/EVALUATION.md), [reproducibility guide](docs/REPRODUCIBILITY.md), and [current scope and project status](docs/PROJECT_STATUS.md).
 
 ## Model and use terms
 
@@ -99,3 +99,4 @@ The project code is MIT-licensed. The `facebook/musicgen-small` model weights ar
 The symbolic pipeline was inspired by [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), an AGPL-3.0 experiment that turns ragtime MIDI into a character stream, trains a recurrent neural network, and converts generated streams back to MIDI. No code or MIDI files from that repository are copied here; this project independently implements the described method and uses a separate Boogie-Woogie dataset. See the [reference review](docs/REFERENCE_REVIEW.md) for a detailed analysis.
 
 MusicGen was introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284) and is distributed as part of [AudioCraft](https://github.com/facebookresearch/audiocraft).
+
