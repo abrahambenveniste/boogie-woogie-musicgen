@@ -83,4 +83,3 @@ The first training run used 1,000 steps; training cross-entropy fell from 4.9853
 - [Results, limitations, and next steps](docs/results.md)
 - [Dataset files and processing details](data/README.md)
 
-The code is MIT-licensed. The downloaded MusicGen weights are CC-BY-NC 4.0; review the [official MusicGen model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md) before reuse.
