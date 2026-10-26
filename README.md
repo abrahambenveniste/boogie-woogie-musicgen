@@ -1,28 +1,28 @@
 # Boogie-Woogie MusicGen
 
-I wanted to make a music project that people can listen to and inspect. This repo has two ways to generate Boogie-Woogie: a pretrained model makes audio from a prompt, and a small LSTM learns note patterns from MIDI scores and writes new MIDI.
+I built this project to try two ways of making Boogie-Woogie with AI: prompt a pretrained audio model, or train a small MIDI model on scores I can inspect.
 
 ## Listen
 
-- **MusicGen:** [play the 10+ second WAV](https://raw.githubusercontent.com/abrahambenveniste/boogie-woogie-musicgen/main/outputs/boogie-woogie-demo.wav) · [prompt and settings](outputs/boogie-woogie-demo.json)
-- **MIDI LSTM:** [download the 10-second MIDI](outputs/symbolic/boogie-rnn-duration-demo-000.mid) · [generation recipe](outputs/symbolic/boogie-rnn-duration-demo.json) · [analysis](outputs/symbolic/evaluation.json)
+- **Audio:** [play the 11-second MusicGen example](https://raw.githubusercontent.com/abrahambenveniste/boogie-woogie-musicgen/main/outputs/boogie-woogie-demo.wav) · [prompt and settings](outputs/boogie-woogie-demo.json)
+- **MIDI:** [download the 10-second LSTM example](outputs/symbolic/boogie-rnn-duration-demo-000.mid) · [generation settings](outputs/symbolic/boogie-rnn-duration-demo.json) · [file analysis](outputs/symbolic/evaluation.json)
 
-The MIDI file needs a MIDI player or DAW. The MusicGen link plays in a browser.
+The WAV plays in a browser. Open the MIDI in a piano app or DAW.
 
-## Make your own
+## Generate music
 
-### Generate audio from a prompt
+### Prompt-to-audio
 
 ```bash
 python -m pip install -e ".[musicgen]"
 boogie-woogie-generate --preset classic-honky-tonk --seconds 11 --seed 42 --output outputs/my-take.wav
 ```
 
-The first run downloads Meta's `facebook/musicgen-small` model. MusicGen's WAV is slightly shorter than the requested time, so 11 seconds makes a file over 10 seconds. You can replace the preset with your own `--prompt`.
+The first run downloads Meta's `facebook/musicgen-small` checkpoint. You can also pass your own prompt with `--prompt`.
 
-### Generate MIDI from the trained LSTM
+### Score-trained MIDI
 
-The saved checkpoint is included, so you can sample without training again:
+The trained checkpoint is included, so sampling does not require another training run:
 
 ```bash
 python -m pip install -e ".[symbolic]"
@@ -30,9 +30,7 @@ python scripts/generate_char_rnn.py --seconds 10 --temperature 0.8 --seed 73
 python scripts/unprocess.py outputs/symbolic/boogie-rnn-duration-demo.txt --prefix my-take --midi-backend mido
 ```
 
-The MIDI and its settings are saved in `outputs/symbolic/`.
-
-To rebuild and train the duration-aware model from the nine included scores:
+To rebuild the corpus and train the model:
 
 ```bash
 python scripts/normalize_type0.py
@@ -40,37 +38,48 @@ python scripts/process.py --note-encoding duration --grid-ticks-per-slot 120
 python scripts/train_char_rnn.py --steps 1000 --seed 42
 ```
 
-The 120-tick grid is a sixteenth note at 480 PPQN. One onset token marks a new note; a separate hold token keeps it sounding. This keeps the same MIDI → text → recurrent model → MIDI approach as [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), while preserving note lengths for the new model. The older onset-only text corpus remains available as a reference baseline.
+## The scores behind the MIDI model
 
-## What I have learned so far
+I trained the LSTM on nine source scores from [PDMX v8](https://doi.org/10.5281/zenodo.14984509). Counts below are positive-velocity note-on events parsed from the local MIDI files.
 
-- The original onset-only format dropped note-offs. Its generated MIDI notes lasted just 1–2 ticks, which is why it sounded like a flurry of clicks.
-- The new encoding keeps note attacks and note holds on a 16th-note grid. The first 10-second sample has 51 note starts per 10 seconds; its median note lasts 240 ticks (about 250 ms at 120 BPM).
-- That is a measurable playback improvement, but it does not prove the phrases sound good. I have not run a structured listening study, and nine scores are still a small training set.
-- MusicGen and the LSTM do different things: MusicGen follows a written prompt and outputs audio; the LSTM learns from the MIDI scores and outputs MIDI.
+| Score | Note-on events |
+| --- | ---: |
+| *Blastin Boogie* | 321 |
+| *Boogie and Blues Bass Lines* | 711 |
+| *Boogie Ben* | 163 |
+| *Boogie Woogie and Blues Piano Exersices* (title spelling in PDMX) | 339 |
+| *Chompin' at the Bit* | 1,258 |
+| *Easy Boogie / Blues etude* | 171 |
+| *Pinetop's Boogie Woogie in F* | 2,416 |
+| *The Fives Boogie Woogie piano solo* | 1,440 |
+| *The Squidgies Boogie* | 924 |
+| **Total** | **7,743** |
 
-## Data and limits
+The source IDs, metadata, license fields, and file hashes are in [`data/manifest.csv`](data/manifest.csv). PDMX labels these files CC0 and marks them as having no license conflict; these dataset fields are not an independent rights review.
 
-The LSTM learns from nine Boogie-Woogie, blues, and piano-etude scores selected from PDMX v8. They contain 7,743 locally parsed note-on events. PDMX reports CC0 and no license conflict for all nine; the original source IDs, metadata, and SHA-256 hashes are in [`data/manifest.csv`](data/manifest.csv). Those fields record the dataset's claims and checks; they are not an independent rights review.
+## How it works
 
-The first LSTM run used 1,000 training steps. Its sampled training loss fell from 4.9853 to 1.0953, but there is no held-out set, so that number says nothing about how well the model generalizes. Neither model guarantees an exact tempo, chord progression, 12-bar form, or convincing piano performance.
+The MIDI path follows the reference project's broad workflow—MIDI → text → recurrent model → MIDI—while adding note lengths:
 
-MusicGen's weights are licensed **CC-BY-NC 4.0**. The code is MIT-licensed. Review those terms before reuse.
+1. Mido merges each source score into one Type-0 MIDI track.
+2. The processor pairs note-ons with note-offs and puts notes on a 120-tick grid. At 480 PPQN, one slot is a sixteenth note.
+3. A pitch token marks a new note; a hold token keeps it sounding; a space advances one slot.
+4. A character-level PyTorch LSTM predicts the next token from the score corpus.
+5. The sampler generates a token stream, and the decoder turns grid positions and holds back into MIDI note-on and note-off events.
 
-## Project map
+The reference project used `midicsv`, Torch7 `torch-rnn` in Docker, and `csvmidi`. This repo keeps its simple MIDI/text/RNN/MIDI idea and its onset-only baseline, and uses Mido and PyTorch for the duration-aware model. The optional MidiTok script audits the same scores with REMI tokens; it does not train a Transformer. MusicGen is a separate pretrained prompt-to-audio model and is not trained on these nine scores.
 
-- `data/` — nine source scores, manifests, Type-0 MIDI, and both old and duration-aware text corpora.
-- `docs/` — the method, data provenance, reference review, results, and rerun steps.
-- `models/` — the trained LSTM checkpoints and settings.
-- `outputs/` — audio and MIDI examples, recipes, and analysis reports.
-- `scripts/` — MIDI preparation, training, sampling, decoding, and analysis.
-- `src/` — MusicGen prompts, command-line tool, and small web app.
+## What the current results say
 
-### Read next
+The new 10-second MIDI sample has 51 note starts. Its note lengths are 120–720 ticks, with a median of 240 ticks (250 ms at 120 BPM). That fixes the old representation's 1–2 tick notes, which happened because it stored attacks but no releases.
 
-- [How it works](docs/how-it-works.md)
-- [Data and models](docs/data-and-models.md)
-- [Results and limitations](docs/results-and-next-steps.md)
-- [Reference project review](docs/reference.md)
-- [Reproduce the project](docs/reproduce.md)
-- [MIDI tokenization audit](docs/midi-tokens.md)
+The first training run used 1,000 steps; training cross-entropy fell from 4.9853 to 1.0953. There is no held-out test or structured listening study, so this does not demonstrate musical quality or generalization. Nine scores are a small, mixed corpus, and a sixteenth-note grid cannot exactly represent every swing triplet.
+
+## Project notes
+
+- [Method, reference workflow, data provenance, and tools](docs/method.md)
+- [Results, limitations, and next steps](docs/results.md)
+- [Dataset files and processing details](data/README.md)
+- [MusicGen model and output notice](MODEL_NOTICE.md)
+
+The code is MIT-licensed. The downloaded MusicGen weights are CC-BY-NC 4.0; read [the model notice](MODEL_NOTICE.md) before reuse.
