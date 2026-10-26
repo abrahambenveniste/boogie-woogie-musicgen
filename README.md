@@ -73,7 +73,9 @@ The reference project used `midicsv`, Torch7 `torch-rnn` in Docker, and `csvmidi
 
 The new 10-second MIDI sample has 51 note starts. Its note lengths are 120–720 ticks, with a median of 240 ticks (250 ms at 120 BPM). That fixes the old representation's 1–2 tick notes, which happened because it stored attacks but no releases.
 
-The first training run used 1,000 steps; training cross-entropy fell from 4.9853 to 1.0953. There is no held-out test or structured listening study, so this does not demonstrate musical quality or generalization. Nine scores are a small, mixed corpus, and a sixteenth-note grid cannot exactly represent every swing triplet.
+My first listen: the MIDI LSTM sounds somewhat musical and steadier in tempo; the MusicGen example sounds poor, with a pronounced tempo problem. This is a subjective impression, not a measured BPM comparison or structured listening study.
+
+The first training run used 1,000 steps; training cross-entropy fell from 4.9853 to 1.0953. There is no held-out test, so this does not demonstrate generalization. Nine scores are a small, mixed corpus, and a sixteenth-note grid cannot exactly represent every swing triplet.
 
 ## Project notes
 
