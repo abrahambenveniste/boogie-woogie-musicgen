@@ -1,6 +1,8 @@
 # Boogie-Woogie MusicGen
 
-I built this project to try two ways of making Boogie-Woogie with AI: prompt a pretrained audio model, or train a small MIDI model on scores I can inspect.
+I built this project to try two ways of making Boogie-Woogie with AI: 
+1. prompt a pretrained audio model, or 
+2. train a small MIDI model on scores I can inspect.
 
 ## Listen
 
