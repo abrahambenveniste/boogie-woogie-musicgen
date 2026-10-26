@@ -4,6 +4,20 @@
 
 The repository contains one MusicGen WAV and one symbolic-RNN MIDI demonstration with its recipes and training log. They show that both pipelines run; they are not benchmark results. No structured listener scores are claimed.
 
+## Reproducible MIDI diagnostics
+
+`scripts/evaluate_symbolic.py` computes descriptive metrics for every MIDI file in `data/normalized_midi/` and the committed generated MIDI with the same Mido parser. Recreate the snapshot with:
+
+```powershell
+python scripts/evaluate_symbolic.py
+```
+
+The JSON report is saved to [`outputs/symbolic/evaluation.json`](../outputs/symbolic/evaluation.json). It records per-file SHA-256 hashes, MIDI type, PPQN, tempo changes, duration, positive-velocity note-on count and density, pitch histogram and range, adjacent pitch-event intervals, onset-tick occupancy, and exact 8-note pitch-event n-gram overlap against the six source files.
+
+The n-gram diagnostic follows chronological note-on event order; ordering of simultaneous notes follows the parser's event order. A match only means an exact short pitch sequence occurs in both files. None of these metrics measures quality, authenticity, originality, plagiarism, or listener preference. Use them alongside the listening protocol below.
+
+In the committed snapshot, the six source files contain 5,390 positive-velocity note-on events in total, with a median file density of 7.562309 events/second. The generated example contains 38 such events at 7.6 events/second, spans MIDI pitches 28–77, and has no exact 8-event pitch windows in common with the sources under this definition. The zero overlap is only a property of this one diagnostic and does not establish originality.
+
 ## Listening protocol
 
 For a small exploratory listening study, generate three takes per method with a documented seed list. Randomize the playback order and ask listeners to score from 1 (weak) to 5 (strong):
@@ -20,13 +34,10 @@ For MusicGen, also score prompt adherence. For the symbolic RNN, compare the gen
 
 ## Symbolic diagnostics
 
-The RNN is trained on only six scores, so simple diagnostics are useful but not sufficient measures of musical quality. A future evaluation can compare generated and source sequences on:
+The RNN is trained on only six scores, so these simple diagnostics are exploratory and not sufficient measures of musical quality. The report already includes pitch range/histograms, event density, adjacent intervals, onset-tick occupancy, and pitch n-gram overlap. Future extensions can add:
 
-- pitch histogram and register;
-- positive-velocity note-on density per second;
-- interval and repeated-pitch distributions;
-- fraction of empty tick slots;
-- repeated n-grams or exact substring overlap with training data;
+- repeated-pitch distributions;
+- note-length and polyphony summaries, with clear handling of the codec's reconstruction assumptions;
 - generated MIDI readability in a piano roll and playback by a listener.
 
 These measurements should be calculated on source and generated MIDI with the same parser. They do not establish plagiarism, originality, style authenticity, or listener preference by themselves.
@@ -38,3 +49,4 @@ These measurements should be calculated on source and generated MIDI with the sa
 - Keep symbolic LSTM and MusicGen results in separate groups; their data, conditioning, output format, and learned task differ, so they are not a direct apples-to-apples model benchmark.
 
 Do not state that an output follows exact BPM, 12-bar form, chord progression, or hand pattern unless that property is independently inspected from the generated audio or MIDI.
+

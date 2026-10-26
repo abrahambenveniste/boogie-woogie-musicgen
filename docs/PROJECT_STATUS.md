@@ -15,6 +15,7 @@
 - Python/Mido Type-0 normalization, actual `midicsv` parsing, deterministic character-corpus generation, per-file processing metrics, and `csvmidi`-based decode.
 - A PyTorch character LSTM training and sampling implementation, plus the legacy Torch7 Docker training recipe.
 - A generated symbolic MIDI/text example, training checkpoint and metadata, and a per-step cross-entropy log.
+- A reproducible Mido-based MIDI diagnostics script and a committed JSON comparison of the six source scores with the generated example.
 - Documentation for both model paths, corpus curation and licenses, exact representation, tool roles, limitations, and reproducibility.
 
 ## Not claimed
@@ -28,7 +29,6 @@
 ## Suggested next work
 
 1. Listen to the MusicGen WAV and generated MIDI rendering, then record human scores using `EVALUATION.md`.
-2. Compare the six source MIDI files with generated MIDI using the same parser for pitch range, event density, interval patterns, empty tick slots, and repeated n-grams. Treat these as exploratory diagnostics, not proof of style or originality.
-3. Compare sampling settings while holding the six-file corpus and trained checkpoint fixed; save each seed and generation recipe.
-4. Consider event-based or duration-aware MIDI encodings as a separately documented follow-up while keeping this reference-compatible baseline intact.
+2. Compare sampling settings while holding the six-file corpus and trained checkpoint fixed; save each seed and generation recipe.
+3. Consider event-based or duration-aware MIDI encodings as a separately documented follow-up while keeping this reference-compatible baseline intact.
 
