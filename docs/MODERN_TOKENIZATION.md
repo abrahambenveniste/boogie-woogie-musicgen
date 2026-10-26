@@ -8,7 +8,7 @@ REMI represents note pitch, velocity, and duration and places notes on bar/posit
 
 ## Install and run
 
-Install only the optional tokenizer extra:
+Install only the optional tokenizer and cross-check extra:
 
 ```powershell
 python -m pip install -e ".[symbolic-modern]"
@@ -27,18 +27,18 @@ The report is written to `outputs/symbolic/remi-token-audit.json`. Use `--source
 
 ## Representation settings
 
-The script records the versions of MidiTok, Symusic (its MIDI I/O engine), and the Hugging Face `tokenizers` package, plus the complete MidiTok `TokenizerConfig`, in the JSON report. The report's REMI run does not train a BPE/Unigram/WordPiece vocabulary, so it does not use the Hugging Face tokenizer-training feature. The current configuration:
+The script records versions of MidiTok, Symusic (its MIDI I/O engine), Hugging Face `tokenizers`, and Mido, plus the complete MidiTok `TokenizerConfig`, in the JSON report. Mido independently reports MIDI type, track count, PPQN, note-on counts, and note-on counts by channel. The report's REMI run does not train a BPE/Unigram/WordPiece vocabulary, so it does not use the Hugging Face tokenizer-training feature. The current configuration:
 
 - uses a 12-position-per-quarter-note grid, allowing common triplet and 16th-note subdivisions on the same grid;
 - quantizes velocity to 16 bins and tempo to 32 bins between 40 and 250 BPM;
 - includes tempo, time-signature, and General MIDI program tokens;
 - uses the full standard MIDI pitch span (0–127) for both pitched and percussion notes.
 
-The report includes the tokenizer's base vocabulary size, each MIDI file's SHA-256, token count, observed unique-token count, counts by token type, pitched and percussion note-token totals, source note-on counts, any per-file difference after tokenization, and a 48-token preview. It also records a stable fingerprint for the sorted normalized source corpus. For source MIDI, it compares REMI token count to the reference character-stream length from `processing_manifest.csv` as a representation-size diagnostic.
+The report includes the tokenizer's base vocabulary size, each MIDI file's SHA-256, token count, observed unique-token count, counts by token type, pitched and percussion note-token totals, Mido's channel-by-channel note-on counts, the MIDICSV manifest's note-on count, any per-file count differences across these parsers, and a 48-token preview. It also records a stable fingerprint for the sorted normalized source corpus. For source MIDI, it compares REMI token count to the reference character-stream length from `processing_manifest.csv` as a representation-size diagnostic.
 
 ## Interpreting the comparison
 
-The two encodings serve different design goals. The reference stream has one character per positive-velocity note-on plus a character for every tick slot. REMI emits structured musical events and quantizes some values according to the saved configuration. MidiTok preprocessing can also change the event count; the audit reports source note-on counts beside note tokens so differences are visible rather than silently assumed away. The first audit surfaced 14 omitted events in `Blastin Boogie`: MidiTok had interpreted its channel-10 notes as percussion and used the narrower default percussion-pitch range. The project now records the full MIDI 0–127 range for percussion as well, preserving all 321 source note-ons in that file. It still labels them `PitchDrum`, while the reference character stream ignores channel semantics and treats the note numbers as pitch symbols. This is a source-data caveat, not a claim that the MIDI sounds like piano.
+The two encodings serve different design goals. The reference stream has one character per positive-velocity note-on plus a character for every tick slot. REMI emits structured musical events and quantizes some values according to the saved configuration. The report compares raw Mido counts, the MIDICSV processing manifest, and MidiTok output. The first audit surfaced 14 omitted events in `Blastin Boogie`: MidiTok had interpreted its channel-10 notes as percussion and used the narrower default percussion-pitch range. The project now records the full MIDI 0–127 range for percussion as well, preserving all 321 source note-ons in that file. It still labels them `PitchDrum`, while the reference character stream ignores channel semantics and treats the note numbers as pitch symbols. This is a source-data caveat, not a claim that the MIDI sounds like piano.
 
 Therefore, the ratio between REMI tokens and reference characters is not a compression benchmark, quality metric, or information-retention score.
 

@@ -8,7 +8,7 @@ Use Python 3.10 or newer. Install only the dependencies for the workflow you pla
 python -m pip install -e ".[musicgen]"          # WAV generation CLI
 python -m pip install -e ".[musicgen,app]"      # WAV CLI and Gradio interface
 python -m pip install -e ".[symbolic]"          # MIDI generation/training and Mido tools
-python -m pip install -e ".[symbolic-modern]"   # MidiTok event-token audit
+python -m pip install -e ".[symbolic-modern]"   # MidiTok/Symusic tokens + Mido cross-check
 python -m pip install -e ".[musicgen,app,symbolic,symbolic-modern]"  # all features
 ```
 

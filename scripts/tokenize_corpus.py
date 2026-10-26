@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 try:
+    import mido
     from miditok import REMI, TokenizerConfig
 except ImportError as exc:  # pragma: no cover - exercised by the user-facing error
     raise SystemExit(
@@ -89,6 +90,26 @@ def make_tokenizer() -> tuple[REMI, dict[str, Any]]:
     return REMI(config), config.to_dict(serialize=True)
 
 
+def midi_event_profile(path: Path) -> dict[str, Any]:
+    """Count raw note-ons and MIDI channels independently with Mido."""
+    midi = mido.MidiFile(path)
+    channel_counts: Counter[int] = Counter()
+    for track in midi.tracks:
+        for message in track:
+            if message.type == "note_on" and message.velocity > 0:
+                channel_counts[message.channel] += 1
+    return {
+        "midi_type": midi.type,
+        "track_count": len(midi.tracks),
+        "ticks_per_beat": midi.ticks_per_beat,
+        "positive_velocity_note_on_events": sum(channel_counts.values()),
+        "note_on_events_by_channel_index": {
+            str(channel): count for channel, count in sorted(channel_counts.items())
+        },
+        "contains_general_midi_channel_10": 9 in channel_counts,
+    }
+
+
 def tokenize_file(path: Path, tokenizer: REMI, reference_rows: dict[str, dict[str, int]]) -> dict[str, Any]:
     encoded = tokenizer.encode(path)
     sequences = encoded if isinstance(encoded, list) else [encoded]
@@ -101,12 +122,15 @@ def tokenize_file(path: Path, tokenizer: REMI, reference_rows: dict[str, dict[st
     type_counts = Counter(token.partition("_")[0] for token in tokens)
     reference_row = reference_rows.get(path.name, {})
     reference_length = reference_row.get("encoded_sequence_characters")
-    reference_note_events = reference_row.get("positive_velocity_note_on_events")
+    manifest_note_events = reference_row.get("positive_velocity_note_on_events")
+    midi_profile = midi_event_profile(path)
+    mido_note_events = midi_profile["positive_velocity_note_on_events"]
     pitch_tokens = type_counts.get("Pitch", 0)
     drum_tokens = type_counts.get("PitchDrum", 0)
     result: dict[str, Any] = {
         "file": repo_path(path),
         "sha256": sha256_file(path),
+        "mido_profile": midi_profile,
         "token_count": len(tokens),
         "unique_tokens_observed": len(set(tokens)),
         "token_type_counts": dict(sorted(type_counts.items())),
@@ -115,12 +139,11 @@ def tokenize_file(path: Path, tokenizer: REMI, reference_rows: dict[str, dict[st
         "note_event_token_count": pitch_tokens + drum_tokens,
         "velocity_token_count": type_counts.get("Velocity", 0),
         "duration_token_count": type_counts.get("Duration", 0),
-        "reference_positive_velocity_note_on_events": reference_note_events,
-        "source_note_event_count_minus_remi_note_tokens": (
-            reference_note_events - pitch_tokens - drum_tokens
-            if reference_note_events is not None
-            else None
+        "processing_manifest_positive_velocity_note_on_events": manifest_note_events,
+        "manifest_note_event_count_minus_mido_note_ons": (
+            manifest_note_events - mido_note_events if manifest_note_events is not None else None
         ),
+        "mido_note_on_count_minus_remi_note_tokens": mido_note_events - pitch_tokens - drum_tokens,
         "reference_character_stream_characters": reference_length,
         "remi_tokens_per_reference_character": (
             round(len(tokens) / reference_length, 6) if reference_length else None
@@ -152,7 +175,7 @@ def build_report(
 
     tokenizer, config = make_tokenizer()
     package_versions = {}
-    for package in ("miditok", "symusic", "tokenizers"):
+    for package in ("miditok", "symusic", "tokenizers", "mido"):
         try:
             package_versions[package] = version(package)
         except PackageNotFoundError:  # pragma: no cover - miditok is required
@@ -163,8 +186,12 @@ def build_report(
     generated_records = [tokenize_file(path, tokenizer, {}) for path in generated_paths]
     all_source_tokens = sum(record["token_count"] for record in source_records)
     all_source_note_tokens = sum(record["note_event_token_count"] for record in source_records)
-    all_reference_note_events = sum(
-        record["reference_positive_velocity_note_on_events"] or 0 for record in source_records
+    all_mido_note_events = sum(
+        record["mido_profile"]["positive_velocity_note_on_events"] for record in source_records
+    )
+    all_manifest_note_events = sum(
+        record["processing_manifest_positive_velocity_note_on_events"] or 0
+        for record in source_records
     )
     all_reference_chars = sum(
         record["reference_character_stream_characters"] or 0 for record in source_records
@@ -195,11 +222,15 @@ def build_report(
             else None,
             "reference_character_stream_characters": all_reference_chars or None,
             "remi_token_count": all_source_tokens,
-            "reference_positive_velocity_note_on_events": all_reference_note_events or None,
+            "mido_positive_velocity_note_on_events": all_mido_note_events,
+            "processing_manifest_positive_velocity_note_on_events": all_manifest_note_events or None,
             "remi_note_event_token_count": all_source_note_tokens,
-            "reference_note_event_count_minus_remi_note_tokens": (
-                all_reference_note_events - all_source_note_tokens
-                if all_reference_note_events
+            "mido_note_on_count_minus_remi_note_tokens": (
+                all_mido_note_events - all_source_note_tokens if all_mido_note_events else None
+            ),
+            "manifest_note_event_count_minus_mido_note_ons": (
+                all_manifest_note_events - all_mido_note_events
+                if all_manifest_note_events
                 else None
             ),
             "remi_tokens_per_reference_character": (
@@ -211,6 +242,7 @@ def build_report(
         "generated_files": generated_records,
         "interpretation": [
             "REMI is an event-based representation: it uses bar/position, pitch, velocity, duration, and configured tempo, time-signature, and program tokens.",
+            "Raw MIDI note-on counts and channel counts come from Mido; the reference count comes from the MIDICSV processing manifest; REMI tokens come from MidiTok/Symusic. Compare these independent paths before interpreting a count difference.",
             "The reference character stream records pitch onsets on a dense tick grid; its character count is not directly comparable to REMI token count as a measure of model quality or information content.",
             "This report tokenizes files for inspection. It does not train a Transformer or establish musical quality.",
             "The fixed 12-position-per-quarter grid, 16 velocity bins, and 32 tempo bins quantize source events; inspect the recorded configuration before interpreting results.",

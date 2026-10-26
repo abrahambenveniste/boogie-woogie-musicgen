@@ -29,7 +29,7 @@ MusicGen and the symbolic LSTM are separate experiments. MusicGen is pretrained 
 - Python scripts to normalize MIDI to Type 0, serialize MIDI through `midicsv`, train and sample a character LSTM, and decode generated text to MIDI CSV/MIDI.
 - A committed symbolic-RNN checkpoint, training-loss history, and three generated MIDI/text takes with per-run recipes.
 - A reproducible MIDI diagnostic script and [JSON comparison report](outputs/symbolic/evaluation.json) for the six source scores and three generated takes.
-- A modern MidiTok REMI tokenization report with source hashes, recorded tokenizer settings, per-file token counts, and short token previews.
+- A modern MidiTok REMI tokenization report with source hashes, recorded tokenizer settings, per-file token counts and previews, plus a Mido cross-check of MIDI channels and note-on counts.
 - Documentation of the data selection, representation, model, tools, limitations, licenses, and reproducibility.
 
 The six-score corpus is a transparent portfolio-scale demonstration, not a broad or balanced Boogie-Woogie benchmark. PDMX records each selected item as CC0 with `license_conflict=False`; this is dataset metadata, not an independent legal determination. See [data provenance and model terms](docs/DATA_AND_MODEL.md).

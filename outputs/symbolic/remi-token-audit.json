@@ -496,10 +496,12 @@
     "use_velocities": true
   },
   "dataset": {
+    "manifest_note_event_count_minus_mido_note_ons": 0,
+    "mido_note_on_count_minus_remi_note_tokens": 0,
+    "mido_positive_velocity_note_on_events": 5390,
+    "processing_manifest_positive_velocity_note_on_events": 5390,
     "reference_character_stream_characters": 677482,
     "reference_manifest": "data/processed/processing_manifest.csv",
-    "reference_note_event_count_minus_remi_note_tokens": 0,
-    "reference_positive_velocity_note_on_events": 5390,
     "remi_note_event_token_count": 5390,
     "remi_token_count": 25158,
     "remi_tokens_per_reference_character": 0.037135,
@@ -522,14 +524,25 @@
     {
       "duration_token_count": 38,
       "file": "outputs/symbolic/boogie-rnn-seed-073-000.mid",
+      "manifest_note_event_count_minus_mido_note_ons": null,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 38
+        },
+        "positive_velocity_note_on_events": 38,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 38,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 38,
+      "processing_manifest_positive_velocity_note_on_events": null,
       "reference_character_stream_characters": null,
-      "reference_positive_velocity_note_on_events": null,
       "remi_tokens_per_reference_character": null,
       "sha256": "4f3296b9d5966ba6a7e6baa74aa9b43a0fef944d2373db65741e37d674ccf378",
-      "source_note_event_count_minus_remi_note_tokens": null,
       "token_count": 177,
       "token_preview": [
         "Bar_None",
@@ -597,14 +610,25 @@
     {
       "duration_token_count": 23,
       "file": "outputs/symbolic/boogie-rnn-seed-074-000.mid",
+      "manifest_note_event_count_minus_mido_note_ons": null,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 23
+        },
+        "positive_velocity_note_on_events": 23,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 23,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 23,
+      "processing_manifest_positive_velocity_note_on_events": null,
       "reference_character_stream_characters": null,
-      "reference_positive_velocity_note_on_events": null,
       "remi_tokens_per_reference_character": null,
       "sha256": "970beb416228e6b36df27d98662fac835048ad0370609fee21311cafb141f4ca",
-      "source_note_event_count_minus_remi_note_tokens": null,
       "token_count": 111,
       "token_preview": [
         "Bar_None",
@@ -672,14 +696,25 @@
     {
       "duration_token_count": 27,
       "file": "outputs/symbolic/boogie-rnn-seed-075-000.mid",
+      "manifest_note_event_count_minus_mido_note_ons": null,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 27
+        },
+        "positive_velocity_note_on_events": 27,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 27,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 27,
+      "processing_manifest_positive_velocity_note_on_events": null,
       "reference_character_stream_characters": null,
-      "reference_positive_velocity_note_on_events": null,
       "remi_tokens_per_reference_character": null,
       "sha256": "29445220cc3d8847e5bcf751b6cbba6a05f7069cb72526635608a65c75016eea",
-      "source_note_event_count_minus_remi_note_tokens": null,
       "token_count": 131,
       "token_preview": [
         "Bar_None",
@@ -747,6 +782,7 @@
   ],
   "interpretation": [
     "REMI is an event-based representation: it uses bar/position, pitch, velocity, duration, and configured tempo, time-signature, and program tokens.",
+    "Raw MIDI note-on counts and channel counts come from Mido; the reference count comes from the MIDICSV processing manifest; REMI tokens come from MidiTok/Symusic. Compare these independent paths before interpreting a count difference.",
     "The reference character stream records pitch onsets on a dense tick grid; its character count is not directly comparable to REMI token count as a measure of model quality or information content.",
     "This report tokenizes files for inspection. It does not train a Transformer or establish musical quality.",
     "The fixed 12-position-per-quarter grid, 16 velocity bins, and 32 tempo bins quantize source events; inspect the recorded configuration before interpreting results."
@@ -757,14 +793,25 @@
     {
       "duration_token_count": 321,
       "file": "data/normalized_midi/blastin_boogie.mid",
+      "manifest_note_event_count_minus_mido_note_ons": 0,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": true,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "9": 321
+        },
+        "positive_velocity_note_on_events": 321,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 321,
       "percussion_note_token_count": 321,
       "pitched_note_token_count": 0,
+      "processing_manifest_positive_velocity_note_on_events": 321,
       "reference_character_stream_characters": 35360,
-      "reference_positive_velocity_note_on_events": 321,
       "remi_tokens_per_reference_character": 0.043015,
       "sha256": "20c32feebf24f82f6bf0c459e9a52baeb271c7adf5d53663c450620b502974c2",
-      "source_note_event_count_minus_remi_note_tokens": 0,
       "token_count": 1521,
       "token_preview": [
         "Bar_None",
@@ -832,14 +879,25 @@
     {
       "duration_token_count": 711,
       "file": "data/normalized_midi/boogie_and_blues_bass_lines.mid",
+      "manifest_note_event_count_minus_mido_note_ons": 0,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 711
+        },
+        "positive_velocity_note_on_events": 711,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 711,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 711,
+      "processing_manifest_positive_velocity_note_on_events": 711,
       "reference_character_stream_characters": 206140,
-      "reference_positive_velocity_note_on_events": 711,
       "remi_tokens_per_reference_character": 0.017527,
       "sha256": "9b6408ec526da89d485f77a62070289e34b10b7f72e601c1cfd73542bc634bcf",
-      "source_note_event_count_minus_remi_note_tokens": 0,
       "token_count": 3613,
       "token_preview": [
         "Bar_None",
@@ -907,14 +965,25 @@
     {
       "duration_token_count": 163,
       "file": "data/normalized_midi/boogie_ben.mid",
+      "manifest_note_event_count_minus_mido_note_ons": 0,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 163
+        },
+        "positive_velocity_note_on_events": 163,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 163,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 163,
+      "processing_manifest_positive_velocity_note_on_events": 163,
       "reference_character_stream_characters": 24882,
-      "reference_positive_velocity_note_on_events": 163,
       "remi_tokens_per_reference_character": 0.031388,
       "sha256": "b5cf12a94aa179eddf7a7acdec2a43be891f52dee0655c040cdd4dcd1205e57a",
-      "source_note_event_count_minus_remi_note_tokens": 0,
       "token_count": 781,
       "token_preview": [
         "Bar_None",
@@ -982,14 +1051,25 @@
     {
       "duration_token_count": 339,
       "file": "data/normalized_midi/boogie_woogie_blues_exercises.mid",
+      "manifest_note_event_count_minus_mido_note_ons": 0,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 339
+        },
+        "positive_velocity_note_on_events": 339,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 339,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 339,
+      "processing_manifest_positive_velocity_note_on_events": 339,
       "reference_character_stream_characters": 84722,
-      "reference_positive_velocity_note_on_events": 339,
       "remi_tokens_per_reference_character": 0.021081,
       "sha256": "0597b24317992d49945d35b38ed8d3f6576629e3c71614797f60401f56d8ec8d",
-      "source_note_event_count_minus_remi_note_tokens": 0,
       "token_count": 1786,
       "token_preview": [
         "Bar_None",
@@ -1057,14 +1137,25 @@
     {
       "duration_token_count": 2416,
       "file": "data/normalized_midi/pinetops_boogie_woogie_in_f.mid",
+      "manifest_note_event_count_minus_mido_note_ons": 0,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 2416
+        },
+        "positive_velocity_note_on_events": 2416,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 2416,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 2416,
+      "processing_manifest_positive_velocity_note_on_events": 2416,
       "reference_character_stream_characters": 186735,
-      "reference_positive_velocity_note_on_events": 2416,
       "remi_tokens_per_reference_character": 0.05828,
       "sha256": "29300e2f754143cddb9a29cb7e3dc7886cbabfb4b5b3bfac0afc133e0a016dc5",
-      "source_note_event_count_minus_remi_note_tokens": 0,
       "token_count": 10883,
       "token_preview": [
         "Bar_None",
@@ -1132,14 +1223,25 @@
     {
       "duration_token_count": 1440,
       "file": "data/normalized_midi/the_fives_boogie_woogie.mid",
+      "manifest_note_event_count_minus_mido_note_ons": 0,
+      "mido_note_on_count_minus_remi_note_tokens": 0,
+      "mido_profile": {
+        "contains_general_midi_channel_10": false,
+        "midi_type": 0,
+        "note_on_events_by_channel_index": {
+          "0": 1440
+        },
+        "positive_velocity_note_on_events": 1440,
+        "ticks_per_beat": 480,
+        "track_count": 1
+      },
       "note_event_token_count": 1440,
       "percussion_note_token_count": 0,
       "pitched_note_token_count": 1440,
+      "processing_manifest_positive_velocity_note_on_events": 1440,
       "reference_character_stream_characters": 139643,
-      "reference_positive_velocity_note_on_events": 1440,
       "remi_tokens_per_reference_character": 0.047077,
       "sha256": "e859adca977f351efeb12f8c42870107490bbc02e65b451371c51a7b58b7fec8",
-      "source_note_event_count_minus_remi_note_tokens": 0,
       "token_count": 6574,
       "token_preview": [
         "Bar_None",
@@ -1209,6 +1311,7 @@
     "base_vocabulary_size": 735,
     "packages": {
       "miditok": "3.1.0",
+      "mido": "1.3.3",
       "symusic": "0.6.0",
       "tokenizers": "0.23.3"
     },
