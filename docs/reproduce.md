@@ -113,7 +113,7 @@ On 2026-10-26, a fresh shallow clone of the public repository generated, decoded
 
 ## Legacy Torch7 route
 
-The exact historical workflow uses `crisbal/torch-rnn:base` and its upstream Torch7 `torch-rnn` checkout. See [`SYMBOLIC_RNN_WORKFLOW.md`](SYMBOLIC_RNN_WORKFLOW.md) for `scripts/preprocess.py`, `th train.lua`, and `th sample.lua` commands. The Docker image is based on Ubuntu 14.04 and is not pinned to a modern, maintained software stack. Docker was unavailable in the authoring environment, so the committed model and generated MIDI use the modern PyTorch implementation instead.
+The exact historical workflow uses `crisbal/torch-rnn:base` and its upstream Torch7 `torch-rnn` checkout. See [`how-it-works.md`](how-it-works.md) for `scripts/preprocess.py`, `th train.lua`, and `th sample.lua` commands. The Docker image is based on Ubuntu 14.04 and is not pinned to a modern, maintained software stack. Docker was unavailable in the authoring environment, so the committed model and generated MIDI use the modern PyTorch implementation instead.
 
 ## MusicGen inference recipe
 

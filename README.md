@@ -6,9 +6,15 @@ Both are short experiments, not finished songs. The MIDI model learns from just 
 
 ## Have a listen
 
-- **MusicGen:** [play the 4-second WAV](outputs/boogie-woogie-demo.wav) · [see the prompt and settings](outputs/boogie-woogie-demo.json)
-- **MIDI model:** [open a generated MIDI](outputs/symbolic/boogie-rnn-demo-000.mid) · [see the note stream](outputs/symbolic/boogie-rnn-demo.txt) · [see its settings](outputs/symbolic/boogie-rnn-demo.json)
+- **MusicGen:** [listen to the WAV](https://raw.githubusercontent.com/abrahambenveniste/boogie-woogie-musicgen/main/outputs/boogie-woogie-demo.wav) · [see the prompt and settings](outputs/boogie-woogie-demo.json)
+- **MIDI model:** [download a generated MIDI](https://raw.githubusercontent.com/abrahambenveniste/boogie-woogie-musicgen/main/outputs/symbolic/boogie-rnn-demo-000.mid) · [see the note stream](outputs/symbolic/boogie-rnn-demo.txt) · [see its settings](outputs/symbolic/boogie-rnn-demo.json)
 - **Three more MIDI takes:** [seed 73](outputs/symbolic/boogie-rnn-seed-073-000.mid) · [seed 74](outputs/symbolic/boogie-rnn-seed-074-000.mid) · [seed 75](outputs/symbolic/boogie-rnn-seed-075-000.mid)
+
+## What we know so far
+
+- MusicGen generated a 3.94-second mono clip at 32 kHz. A listener still needs to judge how well it follows the Boogie-Woogie prompt.
+- The symbolic LSTM trains and writes valid MIDI, but its current notes last about 1–2 milliseconds; this is a data-format problem we need to fix before judging it as a piano performance.
+- The loss fell during training, but it was measured on sampled windows from only six scores; there is no held-out quality result yet.
 
 ## Make a short audio clip
 
@@ -46,7 +52,7 @@ python scripts/generate_char_rnn.py --ticks 4800 --seed 73
 python scripts/unprocess.py outputs/symbolic/boogie-rnn-demo.txt --prefix boogie-rnn-demo --midi-backend csvmidi --csvmidi csvmidi
 ```
 
-If `csvmidi` is not installed, the last command can use the Mido fallback. See [the full MIDI walkthrough](docs/SYMBOLIC_RNN_WORKFLOW.md) for the exact steps and the original Torch7 option.
+If `csvmidi` is not installed, the last command can use the Mido fallback. See [the full MIDI walkthrough](docs/how-it-works.md) for the exact steps and the original Torch7 option.
 
 ## How the two experiments work
 
@@ -76,18 +82,25 @@ PDMX marks the selected entries as CC0 with no recorded license conflict. Those 
 
 The saved LSTM run used 1,000 training steps. Its first and last minibatch losses were 4.2998 and 0.0480; these are training readings, not a held-out quality score. The three saved MIDI takes are five seconds long. The [evaluation report](outputs/symbolic/evaluation.json) compares their notes with the source scores.
 
-I added a second view of the MIDI files with MidiTok's REMI tokenizer. It produced **25,158 tokens** and **5,390 note tokens**; it is a tokenization audit, not a Transformer trained on this small corpus. The [report](outputs/symbolic/remi-token-audit.json) includes a channel detail: one source score is marked as percussion by MidiTok.
+There is also a second view of the MIDI files from MidiTok's REMI tokenizer. It produced **25,158 tokens** and **5,390 note tokens**; it is a tokenization audit, not a Transformer trained on this small corpus. The [report](outputs/symbolic/remi-token-audit.json) includes a channel detail: one source score is marked as percussion by MidiTok.
+
+## Project map
+
+- `data/` — six source scores, their Type-0 copies, processed model input, and source manifests.
+- `docs/` — six focused guides covering the workflow, data, results, reference, and reruns.
+- `models/` — the saved PyTorch LSTM checkpoint and its settings.
+- `outputs/` — the listenable MusicGen WAV, generated MIDI examples, recipes, and analysis reports.
+- `scripts/` — commands to prepare MIDI, train and sample the LSTM, tokenize, and inspect results.
+- `src/` — the MusicGen generator, prompt presets, command-line tool, and small web app.
 
 ## Project notes
 
-- [Data and model terms](docs/DATA_AND_MODEL.md) — where the scores and pretrained model come from, and what their licenses say.
-- [Methodology](docs/METHODOLOGY.md) — what happens in each generation path.
-- [MIDI workflow](docs/SYMBOLIC_RNN_WORKFLOW.md) — the reference method, its adaptation, and each conversion step.
-- [Reference review](docs/REFERENCE_REVIEW.md) — what I found in `rag-shenanigann` and what I carried forward.
-- [Evaluation](docs/EVALUATION.md) — what I measured and what those measurements can tell us.
-- [REMI tokenization](docs/MODERN_TOKENIZATION.md) — the optional modern MIDI representation and audit.
-- [Reproducibility](docs/REPRODUCIBILITY.md) — installs, commands, seeds, and saved run details.
-- [Current scope](docs/PROJECT_STATUS.md) — what works now and what I may try next.
+- [How it works](docs/how-it-works.md) — both generation paths and the full MIDI walkthrough.
+- [Data and models](docs/data-and-models.md) — sources, model details, and license notes.
+- [Results and next steps](docs/results-and-next-steps.md) — findings, evaluation, limits, and what to improve.
+- [MIDI tokens](docs/midi-tokens.md) — the optional MidiTok REMI audit.
+- [Reference project](docs/reference.md) — what `rag-shenanigann` does and what this project adapts.
+- [Run it again](docs/reproduce.md) — installs, commands, seeds, and saved run details.
 
 ## A few things to know
 
@@ -95,5 +108,5 @@ I added a second view of the MIDI files with MidiTok's REMI tokenizer. It produc
 - Neither path guarantees a convincing performance or a strict 12-bar blues structure.
 - The MusicGen weights are licensed **CC-BY-NC 4.0**. Project code is MIT-licensed; PDMX source records are listed in the data manifest.
 
-The MusicGen experiment uses Meta's [`facebook/musicgen-small`](https://huggingface.co/facebook/musicgen-small), introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284).
+The MusicGen experiment uses Meta's [`facebook/musicgen-small`](https://huggingface.co/facebook/musicgen-small), introduced in [“Simple and Controllable Music Generation”](https://arxiv.org/abs/2306.05284). The symbolic experiment is inspired by [`rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann).
 

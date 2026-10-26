@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import json
 import statistics
-from collections import Counter
+from collections import Counter, defaultdict, deque
 from pathlib import Path
 from typing import Any
 
@@ -60,6 +60,8 @@ def midi_metrics(path: Path) -> dict[str, Any]:
     previous_tick = 0
     elapsed_seconds = 0.0
     note_events: list[tuple[int, float, int]] = []
+    active_notes: dict[tuple[int, int], deque[int]] = defaultdict(deque)
+    note_durations_ticks: list[int] = []
 
     for tick, _, message in events:
         elapsed_seconds += (tick - previous_tick) * tempo / 1_000_000 / midi.ticks_per_beat
@@ -69,6 +71,11 @@ def midi_metrics(path: Path) -> dict[str, Any]:
             tempo_changes.append({"tick": tick, "microseconds_per_beat": tempo})
         elif message.type == "note_on" and message.velocity > 0:
             note_events.append((tick, elapsed_seconds, message.note))
+            active_notes[(message.channel, message.note)].append(tick)
+        elif message.type == "note_off" or (message.type == "note_on" and message.velocity == 0):
+            starts = active_notes[(message.channel, message.note)]
+            if starts:
+                note_durations_ticks.append(tick - starts.popleft())
 
     pitches = [note for _, _, note in note_events]
     onset_ticks = [tick for tick, _, _ in note_events]
@@ -85,6 +92,13 @@ def midi_metrics(path: Path) -> dict[str, Any]:
         "tempo_changes": tempo_changes,
         "duration_seconds": round(duration, 6),
         "positive_velocity_note_on_events": len(note_events),
+        "note_duration_ticks": {
+            "matched_note_count": len(note_durations_ticks),
+            "minimum": min(note_durations_ticks) if note_durations_ticks else None,
+            "median": statistics.median(note_durations_ticks) if note_durations_ticks else None,
+            "maximum": max(note_durations_ticks) if note_durations_ticks else None,
+            "unmatched_note_on_count": sum(len(starts) for starts in active_notes.values()),
+        },
         "note_on_events_per_second": round(len(note_events) / duration, 6) if duration else None,
         "pitch_min": min(pitches) if pitches else None,
         "pitch_max": max(pitches) if pitches else None,
@@ -181,8 +195,8 @@ def build_report(source_dir: Path, generated_paths: list[Path]) -> dict[str, Any
     ]
     source_rates = [source["note_on_events_per_second"] for source in sources if source["note_on_events_per_second"] is not None]
     report = {
-        "schema_version": 2,
-        "method": "Descriptive MIDI note-on diagnostics computed with Mido using the same parser for source and generated files.",
+        "schema_version": 3,
+        "method": "Descriptive MIDI note-on and paired note-duration diagnostics computed with Mido using the same parser for source and generated files.",
         "source_files": sources,
         "source_collection_summary": {
             "file_count": len(sources),
@@ -199,6 +213,7 @@ def build_report(source_dir: Path, generated_paths: list[Path]) -> dict[str, Any
         "interpretation": [
             "These measurements describe MIDI files; they do not measure musical quality, genre authenticity, originality, or listener preference.",
             "Pitch-event n-gram overlap is a narrow exact-sequence diagnostic, not a plagiarism or originality test.",
+            "Note-duration summaries use matched note-on/note-off pairs and report lengths in MIDI ticks; unmatched note-ons are excluded.",
             "The generated score is one stochastic sample from a model trained on only six source files.",
         ],
     }

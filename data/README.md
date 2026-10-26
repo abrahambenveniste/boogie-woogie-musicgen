@@ -10,7 +10,7 @@ Dataset citations requested by the PDMX authors:
 
 `manifest.csv` is the source and integrity record. For each MIDI it records the PDMX object ID and archive path, title, uploader/artist, composer, source license fields, PDMX `n_notes`, locally parsed positive-velocity note-on count and pitch range, local SHA-256, and a brief curation note. The PDMX metadata rows label all six files `cc-zero`, `license_conflict=False`, and `subset:no_license_conflict=True`.
 
-PDMX explains that a discrepancy between public-facing and embedded copyright metadata affected 12.29% of its songs and recommends using the `no_license_conflict` subset. The six selected rows pass that dataset check. This is documented provenance, not independent legal advice or a guarantee that every uploaded arrangement is rights-free. See [`docs/DATA_AND_MODEL.md`](../docs/DATA_AND_MODEL.md) for the project’s rights and data caveats.
+PDMX explains that a discrepancy between public-facing and embedded copyright metadata affected 12.29% of its songs and recommends using the `no_license_conflict` subset. The six selected rows pass that dataset check. This is documented provenance, not independent legal advice or a guarantee that every uploaded arrangement is rights-free. See [`docs/data-and-models.md`](../docs/data-and-models.md) for the project’s rights and data caveats.
 
 The two historical compositions have `is_original=False` in PDMX; the other four are marked original by their PDMX rows. We keep these metadata values as published and do not infer ownership from them. One selected title retains the source spelling “Exersices.”
 
@@ -30,3 +30,4 @@ python scripts/process.py --midicsv midicsv
 ```
 
 PDMX's `n_notes` and this project's MIDI note-on count are intentionally separate columns: they are counted by different PDMX and MIDI parsing paths and do not always match.
+

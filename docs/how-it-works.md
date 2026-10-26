@@ -1,10 +1,51 @@
-# Symbolic MIDI-to-RNN workflow
+# How it works
 
-In one line: follow a score from its MIDI file through text conversion and LSTM sampling back to a playable MIDI file.
+In one line: MusicGen makes short audio from a written prompt; the symbolic model learns pitch-and-tick patterns from MIDI and writes MIDI back.
 
-This document records the Boogie-Woogie adaptation of the symbolic workflow in [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann). The goal is to make every stage inspectable: source MIDI, format conversion, textual encoding, model training, sampling, and MIDI reconstruction.
+## Two ways to generate music
 
-## Pipeline at a glance
+This repository contains two distinct generation experiments. The first uses a pretrained text-to-audio model. The second trains a small symbolic music model from MIDI in this repository using the method described in `s-zeng/rag-shenanigann`.
+
+### Track A: prompt-conditioned MusicGen audio
+
+The MusicGen path asks Meta's `facebook/musicgen-small` checkpoint to generate short audio from a written music brief. A text encoder represents the prompt, an autoregressive Transformer samples discrete audio-code tokens, and an EnCodec decoder reconstructs a waveform. The project uses Hugging Face Transformers and records the prompt, checkpoint, duration, seed, sampling controls, device, library versions, sample rate, and output duration in JSON next to each WAV.
+
+Boogie-Woogie prompts state the intended piano ensemble, left-hand bass role, right-hand riffs, shuffle/swing feel, blues form, and absence of vocals. These are soft conditions: the model can drift from the brief and does not guarantee a BPM, meter, chord sequence, exact 12-bar form, hand independence, or note-level Boogie-Woogie accuracy.
+
+Primary technical references: [MusicGen paper](https://arxiv.org/abs/2306.05284), [AudioCraft MusicGen documentation](https://github.com/facebookresearch/audiocraft/blob/main/docs/MUSICGEN.md), [Hugging Face model documentation](https://huggingface.co/docs/transformers/en/model_doc/musicgen), and the [MusicGen model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md).
+
+### Track B: MIDI character LSTM
+
+This path adapts the reference's symbolic sequence method to Boogie-Woogie. It is custom training performed by this repository, not a pretrained music model and not text-prompted generation.
+
+1. Select MIDI scores from PDMX v8, retain their source fields and hashes in a manifest, and convert each multi-track MIDI to Type 0.
+2. Use `midicsv` to read the MIDI header and events. Preserve PPQN, the first tempo, and positive-velocity note-on pitches only.
+3. Encode each pitch as `chr(33 + pitch)`. Concatenate characters for pitches on the same absolute tick. Put one space between consecutive tick slots, including blank slots. Separate pieces with three newlines.
+4. Train a character-level LSTM to predict the next character from fixed-length windows sampled from the concatenated corpus. The modern path uses PyTorch, embeddings, cross-entropy, AdamW, and gradient clipping. The documented legacy path uses upstream Torch7 `torch-rnn` in the `crisbal/torch-rnn:base` Docker image.
+5. Sample a new note stream. The modern sampler uses the first record's PPQN/tempo prefix and restricts tokens to the observed pitch alphabet plus space, so generated text remains decodable.
+6. Reconstruct a MIDI CSV file and MIDI file. `csvmidi` is preferred when installed; Mido is included as a fallback writer.
+
+The full MIDI sequence is documented in the walkthrough below.
+
+#### What the symbolic model can learn
+
+The LSTM estimates the next-character distribution over one compact serialized score representation. It can learn frequent pitch/tick patterns in the six training items. It does not receive a natural-language prompt, explicit chord labels, part labels, bar markers, note durations, or a formal theory representation. The corpus is deliberately small and is useful for demonstrating an end-to-end data/model pipeline, not for a strong claim about genre-wide composition.
+
+#### Information loss and decoder assumptions
+
+The text representation drops note-off timing, durations, original velocities, instrument programs, channels, separate hands, later tempo changes, sustain pedal, key/time signatures, and other performance controls. It uses a single note character per note-on, so same-tick chords are represented by adjacent characters. MIDI reconstruction assigns velocity 96 and keeps a pitch active until a later tick group changes or clears it. These are explicit simplifications of the reference method.
+
+The reference decoder uses character-string offsets for event times, so chord width can affect reconstructed timing. This implementation uses tick-slot indices instead and closes final notes before end-of-track. That improves temporal consistency and MIDI validity but does not restore information discarded before training.
+
+### Evaluation
+
+The MusicGen sample is a pipeline demonstration. The symbolic LSTM sample is a generated MIDI continuation with a recorded seed, temperature, checkpoint hash, corpus hash, PPQN, tempo, and requested tick count. Neither is a benchmark. See [results and next steps](results-and-next-steps.md) for the measurements and listening plan.
+
+## Full MIDI walkthrough
+
+This walkthrough follows one score through the Boogie-Woogie adaptation of [`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann), from source MIDI to generated MIDI.
+
+### Pipeline at a glance
 
 ```mermaid
 flowchart LR
@@ -19,7 +60,7 @@ flowchart LR
     I --> J[Listen, inspect, or edit MIDI]
 ```
 
-## How the reference maps to this project
+### How the reference maps to this project
 
 | Reference stage | Reference implementation | This repository |
 | --- | --- | --- |
@@ -33,7 +74,7 @@ flowchart LR
 
 The project reimplements the described method from scratch. It does not copy the reference's code or data. The reference is licensed AGPL-3.0; this project's own code remains under the repository's MIT license.
 
-## Source data and curation
+### Source data and curation
 
 The source is the PDMX dataset, version v8 (Zenodo record `10.5281/zenodo.14984509`). The files are six MIDI entries from its `mid.tar.gz` archive. We filtered the metadata for clearly Boogie-Woogie or blues piano/bass titles and selected entries whose per-score license is recorded as `cc-zero`, whose `license_conflict` is `False`, and for which a MIDI file is available. The selected rows are listed in [`data/manifest.csv`](../data/manifest.csv); the curation and count conventions are in [`data/README.md`](../data/README.md).
 
@@ -41,7 +82,7 @@ PDMX says its public-facing license metadata disagreed with embedded license met
 
 The bundled scores are a small, hand-curated portfolio sample, not a representative corpus. Four PDMX rows are marked `is_original=True`; two historical score entries are marked `False`. The MIDI file's actual positive-velocity note-on count may differ from PDMX's score-level `n_notes`; both values are preserved in the manifest because they are generated by different parsing paths.
 
-## Type-0 normalization
+### Type-0 normalization
 
 The reference recommends placing notes from all parts on one track before running the recurrent model. The included six raw files are MIDI Type 1; some contain several tracks. `normalize_type0.py` uses Mido to merge their delta-timed event streams into one absolute-time-ordered track and writes Type-0 MIDI under `data/normalized_midi/`:
 
@@ -51,7 +92,7 @@ python scripts/normalize_type0.py --input data/raw_midi --output data/normalized
 
 Mido is used only for this format conversion and the optional output fallback. For the reference-compatible serialization and decode, the pipeline uses Fourmilab's `midicsv` and `csvmidi`. The reference README also names `gnmidifmt` as an optional way to convert types; this project does not require it.
 
-## Text encoding
+### Text encoding
 
 For each normalized MIDI file, `scripts/process.py` calls `midicsv` and reads the resulting CSV records. It writes a block with three lines/fields:
 
@@ -72,13 +113,13 @@ python scripts/process.py `
 
 The pitch mapping is exactly the reference's `chr(33 + pitch)` mapping. The selected source notes range from MIDI pitch 24 to 93, which maps to printable ASCII and keeps the corpus compatible with the byte-oriented legacy Torch7 path. A source containing pitch 94 or higher is rejected by this implementation rather than silently introducing control or multibyte characters.
 
-### Information discarded by the representation
+#### Information discarded by the representation
 
 This is intentionally a compact, lossy encoding. It records only PPQN, the first tempo event, onset tick, and pitch. It drops note-off events and durations, original velocity, instrument/program, channel, hand/part identity, later tempo changes, key/time signatures, pedals, and expressive controls. Converting to Type 0 merges parts and removes explicit left/right-hand structure. Chord simultaneity is represented only by adjacent pitch characters. The output therefore models a stream of pitches and tick boundaries, not a complete expressive performance.
 
-## Model training and sampling
+### Model training and sampling
 
-### Modern, runnable PyTorch implementation
+#### Modern, runnable PyTorch implementation
 
 `scripts/train_char_rnn.py` trains a small character-level LSTM with an embedding layer, one or more recurrent layers, a vocabulary projection, AdamW, cross-entropy, and gradient clipping. Each optimization step samples batches of fixed-length windows from the processed corpus. Its checkpoint stores the vocabulary, architecture, training settings, corpus SHA-256, seed, final loss, and software versions. The CSV log preserves the loss for each step.
 
@@ -106,7 +147,7 @@ python scripts/generate_char_rnn.py `
 
 The result is a new character stream sampled by a model trained in this repository. It is not conditioned on natural-language prompts. A seed makes the sampling repeatable within a compatible runtime, but does not promise byte-identical output across PyTorch versions and hardware.
 
-### Legacy Torch7 `torch-rnn` compatibility route
+#### Legacy Torch7 `torch-rnn` compatibility route
 
 The original tool named in the rag-shenanigann README is `torch-rnn`, a Lua/Torch7 character-level RNN/LSTM. The referenced Docker image is `crisbal/torch-rnn:base`, based on Ubuntu 14.04 and configured for CPU use. Its Dockerfile clones the upstream `jcjohnson/torch-rnn` implementation and installs Torch7, Python 2.7, HDF5, and Lua dependencies. This is a historically faithful option, but it is an old software stack and may require an older Docker host or compatibility work. Docker was not available in the authoring environment, so no Torch7 model was trained here.
 
@@ -145,7 +186,7 @@ th sample.lua \
 
 The checkpoint suffix depends on the iterations completed. For valid decoding, retain the two metadata lines and a note stream composed of pitch symbols and spaces. The original Torch7 sampler is unconstrained; it can sample newlines or header characters in its continuation, which must be cleaned before sending it through the MIDI decoder. The modern PyTorch sampler avoids this by restricting its output alphabet.
 
-## Decode and output MIDI
+### Decode and output MIDI
 
 `scripts/unprocess.py` writes a `midicsv`-format CSV and then calls `csvmidi -z` to create a MIDI file. If `csvmidi` is unavailable, it can use Mido to create the equivalent Type-0 output:
 
@@ -162,11 +203,11 @@ The decoded format infers note lengths because the text encoding contains no dur
 
 The repository includes a generated MIDI, the source character stream, a JSON generation recipe, the LSTM checkpoint, its metadata, and the training-loss CSV. A MIDI player or DAW can open the `.mid`; a soundfont renderer such as TiMidity++ can produce audio on machines where one is installed.
 
-### Committed run record
+#### Committed run record
 
 The checked-in training run used 1,000 optimization steps, 128-character windows, batch size 8, 32-dimensional embeddings, a 96-unit two-layer LSTM, AdamW at 0.002, and seed 42 on CPU. Its first and last sampled minibatch cross-entropies were 4.2998 and 0.0480. The generated demonstration used seed 73, temperature 1.0, 4,800 tick slots, 480 PPQN, and 500,000 microseconds per quarter note. It produced 40 pitch characters and decoded to a 5-second Type-0 MIDI with 38 positive-velocity note-on events in pitches 28–77. The character count and MIDI note-on count differ because repeated pitches and adjacent tick groups are decoded as continuous active notes. The loss values describe optimization on sampled training windows only; there is no validation set or independent quality score.
 
-## Quality and limitations
+### Quality and limitations
 
 - Six pieces are too few to characterize the genre or claim generalization. Many events in these files come from exercises and short examples.
 - The recurrent model learns a continuation distribution over the serialized training symbols. It does not understand harmony, blues form, hand independence, or a natural-language style prompt as explicit concepts.
@@ -174,7 +215,7 @@ The checked-in training run used 1,000 optimization steps, 128-character windows
 - Note duration reconstruction is an inference; the original durations are irrecoverable after preprocessing.
 - No objective style, form, or musicality benchmark is claimed. The committed generation is a reproducible example and should be evaluated by listening and inspecting the MIDI.
 
-## Tool references
+### Tool references
 
 - [Reference repository and scripts](https://github.com/s-zeng/rag-shenanigann)
 - [Fourmilab MIDICSV documentation and downloads](https://www.fourmilab.ch/webtools/midicsv/)
