@@ -1,0 +1,23 @@
+{
+  "method": "character-level LSTM over quantized duration-aware MIDI pitch tokens",
+  "note_encoding": "duration",
+  "pitch_token_encoding": "Unicode attack tokens chr(33 + pitch); hold tokens chr(256 + pitch)",
+  "checkpoint": "models/boogie-char-lstm-duration.pt",
+  "checkpoint_sha256": "e1dd6a65478cca772f805b2568801a46f6e90e0df8cb30f1637702cc005bbf07",
+  "corpus_sha256": "5d98c8b44a8569bd79f5bb08dea43a4a1ce4734256f747deaeb72c967f751900",
+  "seed": 73,
+  "temperature": 0.8,
+  "requested_duration_seconds": 10.0,
+  "generated_grid_slots": 80,
+  "grid_ticks_per_slot": 120,
+  "duration_seconds": 10.0,
+  "ppqn": 480,
+  "tempo_us_per_quarter": 500000,
+  "generated_characters": 177,
+  "generated_note_tokens": 98,
+  "device": "cpu",
+  "torch_version": "2.14.1+cpu",
+  "python_version": "3.13.15",
+  "generated_at_utc": "2026-10-26T22:59:58.216269+00:00",
+  "output_text": "outputs/symbolic/boogie-rnn-duration-demo.txt"
+}

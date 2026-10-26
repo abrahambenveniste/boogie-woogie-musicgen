@@ -15,18 +15,42 @@ import mido
 from boogie_woogie_musicgen.symbolic import corpus_records, csv_from_record, require_program
 
 
-def write_with_mido(path: Path, ppqn: int, tempo: int, sequence: str) -> None:
-    groups = [[ord(token) - 33 for token in slot] for slot in sequence.split(" ")]
+def write_with_mido(
+    path: Path,
+    ppqn: int,
+    tempo: int,
+    sequence: str,
+    note_encoding: str = "onset",
+    grid_ticks_per_slot: int = 1,
+) -> None:
+    groups: list[tuple[set[int], set[int]]] = []
+    for slot in sequence.split(" "):
+        pitches: set[int] = set()
+        attacks: set[int] = set()
+        for token in slot:
+            codepoint = ord(token)
+            if note_encoding == "duration" and 256 <= codepoint <= 383:
+                pitch = codepoint - 256
+            elif 33 <= codepoint <= 160:
+                pitch = codepoint - 33
+                if note_encoding == "duration":
+                    attacks.add(pitch)
+            else:
+                raise ValueError(f"Invalid pitch token {token!r} (code point {codepoint}).")
+            if not 0 <= pitch <= 127:
+                raise ValueError(f"Invalid pitch value {pitch}.")
+            pitches.add(pitch)
+        groups.append((pitches, attacks))
     events: list[tuple[int, int, int, int]] = []
     active: set[int] = set()
-    for tick, group in enumerate(groups):
-        current = set(group)
-        for pitch in active - current:
+    for slot, (current, attacks) in enumerate(groups):
+        tick = slot * grid_ticks_per_slot
+        for pitch in (active - current) | (active & attacks):
             events.append((tick, 0, pitch, 0))
-        for pitch in current - active:
+        for pitch in (current - active) | attacks:
             events.append((tick, 1, pitch, 96))
         active = current
-    end_tick = len(groups)
+    end_tick = len(groups) * grid_ticks_per_slot
     for pitch in active:
         events.append((end_tick, 0, pitch, 0))
 
@@ -67,7 +91,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    text = args.input.read_text(encoding="ascii")
+    text = args.input.read_text(encoding="utf-8")
+    generation_metadata_path = args.input.with_suffix(".json")
+    generation_metadata = (
+        json.loads(generation_metadata_path.read_text(encoding="utf-8"))
+        if generation_metadata_path.is_file()
+        else {}
+    )
+    note_encoding = generation_metadata.get("note_encoding", "onset")
+    grid_ticks_per_slot = int(generation_metadata.get("grid_ticks_per_slot", 1))
     records = corpus_records(text)
     if args.record_index is not None:
         try:
@@ -88,7 +120,10 @@ def main() -> None:
         stem = f"{args.prefix}-{index:03d}"
         csv_path = args.output_dir / f"{stem}.csv"
         midi_path = args.output_dir / f"{stem}.mid"
-        csv_path.write_text(csv_from_record(ppqn, tempo, sequence), encoding="ascii")
+        csv_path.write_text(
+            csv_from_record(ppqn, tempo, sequence, note_encoding, grid_ticks_per_slot),
+            encoding="ascii",
+        )
         if use_csvmidi:
             csvmidi_path = Path(require_program(args.csvmidi))
             subprocess.run(
@@ -99,7 +134,7 @@ def main() -> None:
             )
             backend = "csvmidi"
         else:
-            write_with_mido(midi_path, ppqn, tempo, sequence)
+            write_with_mido(midi_path, ppqn, tempo, sequence, note_encoding, grid_ticks_per_slot)
             backend = "mido"
         decoded = mido.MidiFile(midi_path)
         pitches = [
@@ -125,6 +160,11 @@ def main() -> None:
             "tracks": len(decoded.tracks),
             "ppqn": decoded.ticks_per_beat,
             "tempo_us_per_quarter": tempo,
+            "note_encoding": note_encoding,
+            "grid_ticks_per_slot": grid_ticks_per_slot,
+            "note_encoding": json.loads(args.input.with_suffix(".json").read_text(encoding="utf-8")).get("note_encoding")
+            if args.input.with_suffix(".json").is_file()
+            else None,
             "tick_slots": len(sequence.split(" ")),
             "positive_velocity_note_on_events": len(pitches),
             "pitch_range": [min(pitches), max(pitches)] if pitches else None,

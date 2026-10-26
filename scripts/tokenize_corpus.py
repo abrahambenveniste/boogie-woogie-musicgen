@@ -26,7 +26,7 @@ except ImportError as exc:  # pragma: no cover - exercised by the user-facing er
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCES = ROOT / "data" / "normalized_midi"
 DEFAULT_GENERATED = ROOT / "outputs" / "symbolic"
-DEFAULT_REFERENCE_MANIFEST = ROOT / "data" / "processed" / "processing_manifest.csv"
+DEFAULT_REFERENCE_MANIFEST = ROOT / "data" / "processed" / "duration_processing_manifest.csv"
 DEFAULT_OUTPUT = ROOT / "outputs" / "symbolic" / "remi-token-audit.json"
 
 

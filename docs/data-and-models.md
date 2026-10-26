@@ -1,52 +1,36 @@
-# Data and model provenance
+# Data and models
 
-In one line: this page tracks where the MIDI files and pretrained model came from, and what their recorded terms do and do not tell us.
+In one line: the MIDI model learns from nine curated scores in this repo; MusicGen is a separate pretrained model that uses a written prompt.
 
-This repository has two model paths with different data and rights profiles. The MusicGen checkpoint is pretrained outside this project. The character LSTM checkpoint is trained here on the six MIDI files listed in [`data/manifest.csv`](../data/manifest.csv).
+## MIDI data
 
-## Symbolic MIDI training data
+The nine source MIDI files come from PDMX v8 ([Zenodo DOI 10.5281/zenodo.14984509](https://doi.org/10.5281/zenodo.14984509)). The original six are *Blastin Boogie*, *Boogie and Blues Bass Lines*, *Boogie Ben*, *Boogie Woogie and Blues Piano Exercises*, *Pinetop's Boogie Woogie in F*, and *The Fives Boogie Woogie*. The three additions are *Chompin' at the Bit*, *The Squidgies Boogie*, and *Easy Boogie / Blues etude*.
 
-### Source and filtering
+The additions' PDMX tags and titles point to boogie, blues, or piano-etude material. All nine rows report `cc-zero`, `license_conflict=False`, and inclusion in `subset:no_license_conflict`. PDMX warns that public-facing and embedded license information conflicted for 12.29% of entries and recommends this subset. Those are useful source checks, not a legal opinion; PDMX metadata does not prove every arrangement or transcription is free of third-party rights. The manifest preserves the row-level metadata, IDs, tags, and SHA-256 hashes.
 
-The six MIDI files are from PDMX v8, [Zenodo DOI 10.5281/zenodo.14984509](https://doi.org/10.5281/zenodo.14984509). PDMX is a large collection of public-domain symbolic scores with per-entry metadata and optional MIDI exports. We selected entries whose titles/tags identify Boogie-Woogie or blues piano/bass material, whose PDMX `license` value is `cc-zero`, whose `license_conflict` value is `False`, and whose MIDI file is present. The project contains only these six MIDI files, not the full PDMX archive.
+PDMX reports 7,458 score notes across these entries; Mido counts 7,743 positive-velocity MIDI note-on events. Those totals differ because PDMX's score parser and this project's MIDI parser count different representations. The files contain 913,466 MIDI ticks at 480 PPQN. They are a small, selected sample, with exercises and arrangements mixed in, and are not a representative collection of Boogie-Woogie.
 
-The exact PDMX object identifier, `mid` archive path, title, artist/uploader, composer, source license URL, PDMX score-level note count, locally parsed note-on count and pitch range, and local SHA-256 are recorded in the manifest. Raw files are in [`data/raw_midi/`](../data/raw_midi/). The PDMX v8 MIDI archive MD5 was `d920a21b2fcd99a56d9c381b39debbb2`.
+## MIDI processing and model
 
-Following the PDMX authors' citation guidance, cite the dataset paper (Long et al., ICASSP 2025, [DOI 10.1109/ICASSP49660.2025.10890217](https://doi.org/10.1109/ICASSP49660.2025.10890217)), the related paper listed in the PDMX repository (Xu et al., [arXiv:2410.02084](https://arxiv.org/abs/2410.02084)), and the versioned [PDMX v8 Zenodo record](https://doi.org/10.5281/zenodo.14984509).
+Mido merges each source into a one-track Type-0 MIDI. The current model then pairs note-ons with note-offs, quantizes their start and end to a 120-tick grid, and writes one text symbol per pitch per slot. At 480 PPQN, each slot is a sixteenth note. A new attack uses a pitch token; a held note uses a different token for the same pitch; a space moves to the next slot. If a note is shorter than one grid slot, it is represented for one slot. The output stores PPQN and the first tempo for MIDI reconstruction.
 
-PDMX reports a discrepancy between public-facing copyright metadata and embedded metadata that affected 31,221 (12.29%) entries and recommends the `no_license_conflict` subset. All six selected entries are in that subset. This is a documented data-source check, not an independent legal review. A per-entry CC0 field and no-conflict flag do not guarantee that a user-uploaded arrangement or transcription is free of every third-party right. Four selected entries are marked `is_original=True` by PDMX; two historical score entries are marked `False`. These are preserved as source metadata, not treated as ownership determinations.
+The old onset-only corpus remains in `data/processed/training_data.txt` as a reference baseline. It uses the `midicsv`/text method and cannot preserve note lengths. The current duration-aware corpus is `data/processed/training_data_duration.txt`; its processing manifest and JSON sidecar record the quantization step, per-file counts, software, and SHA-256.
 
-The PDMX score-level `n_notes` values total 5,020. A local MIDI parser counts 5,390 positive-velocity `Note_on_c` events. These counts differ because PDMX's score-level statistic and this project's MIDI event parser are distinct measurement paths. Both are retained; the processed corpus's per-file event counts are in [`data/processed/processing_manifest.csv`](../data/processed/processing_manifest.csv).
+The local model is a character-level PyTorch LSTM with 32-dimensional embeddings, 96 hidden units, two recurrent layers, AdamW, cross-entropy, and gradient clipping. It was trained for 1,000 steps with seed 42 on CPU. The checkpoint records the vocabulary, corpus hash, encoding, grid size, settings, and versions. The training text is small enough to inspect directly, and the checkpoint can be sampled without downloading other weights.
 
-### Corpus size and limitations
+The optional MidiTok workflow tokenizes the same normalized MIDI as REMI events. It is a representation audit; this repository does not train a Transformer on these nine scores.
 
-The six Type-0-processed MIDI files use 480 PPQN and encode 672,098 tick slots and 5,390 positive-velocity note-on events. The resulting training text is 677,566 ASCII bytes. All local source MIDI hashes are in the manifest. This is a small, curated starter corpus, not a representative sample of all Boogie-Woogie performance practice. It contains exercises, short examples, and historical pieces, with no held-out test split or benchmark claim.
+## Prompt-to-audio model
 
-The optional MidiTok audit exposed a MIDI-channel caveat: `blastin_boogie.mid` stores its notes on zero-indexed channel 9 (General MIDI channel 10), which MidiTok classifies as percussion. The reference-compatible character encoder drops channel identity and learns only from note numbers and tick positions, so this score contributes key numbers as if they were ordinary pitch symbols. Keep this limitation in mind when describing the corpus as piano data. The MidiTok audit widens its percussion pitch range to 0–127 so none of this file's 321 note-on events is discarded by the tokenizer's default narrower drum range.
+The audio path uses Meta's pretrained [`facebook/musicgen-small`](https://huggingface.co/facebook/musicgen-small) through Hugging Face Transformers. The prompt describes the target ensemble and groove. MusicGen samples audio-code tokens and decodes them into a WAV file; the project records the prompt, model, duration, seed, sampling controls, device, versions, sample rate, and actual duration in JSON.
 
-The text encoder drops duration, note-off, velocity, instrument, channel, separate parts, later tempo changes, and performance controls. The model learns this lossy serialization; it does not train directly on the original full MIDI event stream.
+The project does not train MusicGen on the MIDI corpus. Its model card says the model was trained on 20,000 hours of licensed music, including Meta Music Initiative Sound Collection, Shutterstock, and Pond5 materials. Those training tracks are not in this repository.
 
-## MusicGen training data and checkpoint
+The MusicGen weights are licensed **CC-BY-NC 4.0**. This is separate from the repository's MIT code license and does not settle rights in every generated output. Review the [model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md) and applicable terms before reuse.
 
-The prompt-to-audio path uses Meta's pretrained `facebook/musicgen-small` checkpoint through Hugging Face Transformers. The model card describes training on 20,000 hours of licensed music, including Meta's Music Initiative Sound Collection plus Shutterstock and Pond5 music. The underlying training tracks are not distributed in this repository, and this project cannot inspect them individually.
+## Source citations
 
-Sources:
-
-- [MusicGen model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md)
-- [AudioCraft MusicGen documentation](https://github.com/facebookresearch/audiocraft/blob/main/docs/MUSICGEN.md)
-- [MusicGen checkpoint on Hugging Face](https://huggingface.co/facebook/musicgen-small)
-
-The MusicGen weights are licensed **CC-BY-NC 4.0**. They are downloaded at runtime and are not checked into Git. Review the model card and license before commercial use. The code license and the model-weight license are separate.
-
-## Generated artifact rights
-
-The project does not make a blanket rights claim over MusicGen audio or generated MIDI. The model-weight license, PDMX metadata, and this repository's MIT code license do not by themselves determine rights in every generated output or source transcription. Review current upstream terms and applicable third-party rights before redistribution or commercial reuse.
-
-## Reference repository
-
-[`s-zeng/rag-shenanigann`](https://github.com/s-zeng/rag-shenanigann) includes 512 MIDI files and a preprocessed text corpus but does not provide a per-file data provenance/license manifest. Its code repository is AGPL-3.0; that code license should not be assumed to settle the rights status of the included MIDI files. This project reads the reference code and method for analysis but does not copy its code, MIDI files, sample corpus, or model checkpoints.
-
-## Project code and dependencies
-
-The original code in this repository is under the MIT license. Fourmilab MIDICSV, Mido, PyTorch, Transformers, MusicGen, MidiTok, Symusic, and Hugging Face `tokenizers` are separate upstream projects with their own licenses. The REMI audit uses MidiTok and Symusic for event tokenization, and Mido to independently profile raw MIDI tracks and channels; it does not train a Hugging Face BPE/Unigram/WordPiece tokenizer. `torch-rnn` is included only as an optional documented reproduction path; no Torch7 source code is vendored here. See [`LICENSE`](../LICENSE), [`how-it-works.md`](how-it-works.md), and [`midi-tokens.md`](midi-tokens.md) for tool roles and version caveats.
-
+- Long, Novack, Berg-Kirkpatrick, and McAuley, “PDMX: A Large-Scale Public Domain MusicXML Dataset for Symbolic Music Processing,” ICASSP 2025, [DOI 10.1109/ICASSP49660.2025.10890217](https://doi.org/10.1109/ICASSP49660.2025.10890217).
+- Xu et al., “Generating Symbolic Music from Natural Language Prompts using an LLM-Enhanced Dataset,” [arXiv:2410.02084](https://arxiv.org/abs/2410.02084).
+- PDMX v8 data release, [Zenodo DOI 10.5281/zenodo.14984509](https://doi.org/10.5281/zenodo.14984509).
+- MusicGen, [model card](https://github.com/facebookresearch/audiocraft/blob/main/model_cards/MUSICGEN_MODEL_CARD.md) and [paper](https://arxiv.org/abs/2306.05284).

@@ -2,8 +2,8 @@
   "prompt": "Instrumental solo piano in a lively classic Boogie-Woogie style, steady swinging 12-bar blues feel, rolling walking left-hand bass, syncopated right-hand blues riffs and turnarounds, bright honky-tonk piano, intimate vintage club sound, no vocals.",
   "model_id": "facebook/musicgen-small",
   "model_weights_license": "CC-BY-NC 4.0",
-  "duration_requested_seconds": 4,
-  "duration_actual_seconds": 3.94,
+  "duration_requested_seconds": 11,
+  "duration_actual_seconds": 10.94,
   "sample_rate_hz": 32000,
   "channels": 1,
   "seed": 42,
@@ -14,7 +14,6 @@
   "torch_version": "2.14.1+cpu",
   "transformers_version": "5.21.0",
   "python_version": "3.13.15",
-  "generated_at_utc": "2026-10-26T21:33:16.684393+00:00",
+  "generated_at_utc": "2026-10-26T23:08:37.854306+00:00",
   "rights_note": "The model-weights license is not a grant of rights in generated audio. Review applicable model terms and third-party rights before reuse."
 }
-

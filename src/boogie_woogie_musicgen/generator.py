@@ -44,7 +44,7 @@ def generate_audio(
     *,
     prompt: str,
     output_path: str | Path,
-    seconds: int = 8,
+    seconds: int = 11,
     seed: int = 42,
     model_id: str = DEFAULT_MODEL,
     device: str = "auto",

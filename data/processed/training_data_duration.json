@@ -1,0 +1,109 @@
+{
+  "method": "Mido Type-0 duration-aware attack/hold tokens on a quantized grid",
+  "note_encoding": "duration",
+  "grid_ticks_per_slot": 120,
+  "pitch_token_encoding": "Unicode attack tokens chr(33 + pitch); hold tokens chr(256 + pitch)",
+  "input_directory": "data/normalized_midi",
+  "midicsv_command": null,
+  "midicsv_version_label": null,
+  "midicsv_executable_sha256": null,
+  "output_text": "data/processed/training_data_duration.txt",
+  "output_sha256": "5d98c8b44a8569bd79f5bb08dea43a4a1ce4734256f747deaeb72c967f751900",
+  "output_bytes": 33270,
+  "input_files": [
+    {
+      "file": "blastin_boogie.mid",
+      "normalized_midi_sha256": "20c32feebf24f82f6bf0c459e9a52baeb271c7adf5d53663c450620b502974c2",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 292,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 321,
+      "encoded_sequence_characters": 746
+    },
+    {
+      "file": "boogie_and_blues_bass_lines.mid",
+      "normalized_midi_sha256": "9b6408ec526da89d485f77a62070289e34b10b7f72e601c1cfd73542bc634bcf",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 200000,
+      "tick_slots": 1712,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 711,
+      "encoded_sequence_characters": 3740
+    },
+    {
+      "file": "boogie_ben.mid",
+      "normalized_midi_sha256": "b5cf12a94aa179eddf7a7acdec2a43be891f52dee0655c040cdd4dcd1205e57a",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 206,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 163,
+      "encoded_sequence_characters": 617
+    },
+    {
+      "file": "boogie_woogie_blues_exercises.mid",
+      "normalized_midi_sha256": "0597b24317992d49945d35b38ed8d3f6576629e3c71614797f60401f56d8ec8d",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 704,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 339,
+      "encoded_sequence_characters": 1405
+    },
+    {
+      "file": "chompin_at_the_bit.mid",
+      "normalized_midi_sha256": "e7909dcc1e947ca011170ed100bd959200d1828d7a9d81ba566a6f95d75e8e67",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 960,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 1258,
+      "encoded_sequence_characters": 3753
+    },
+    {
+      "file": "easy_boogie_blues_etude.mid",
+      "normalized_midi_sha256": "d33ab7e1a0d89998601be0b8fa4f3e0d60685f643669c46c364136e15169946a",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 599999,
+      "tick_slots": 200,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 171,
+      "encoded_sequence_characters": 559
+    },
+    {
+      "file": "pinetops_boogie_woogie_in_f.mid",
+      "normalized_midi_sha256": "29300e2f754143cddb9a29cb7e3dc7886cbabfb4b5b3bfac0afc133e0a016dc5",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 375000,
+      "tick_slots": 1536,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 2416,
+      "encoded_sequence_characters": 6588
+    },
+    {
+      "file": "the_fives_boogie_woogie.mid",
+      "normalized_midi_sha256": "e859adca977f351efeb12f8c42870107490bbc02e65b451371c51a7b58b7fec8",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 428572,
+      "tick_slots": 1152,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 1440,
+      "encoded_sequence_characters": 4050
+    },
+    {
+      "file": "the_squidgies_boogie.mid",
+      "normalized_midi_sha256": "e94d0bd40d036cfbcbf31a25b5a82ad02e964d23b43d69bd22be6a655402f4e9",
+      "ppqn": 480,
+      "tempo_us_per_quarter": 500000,
+      "tick_slots": 852,
+      "grid_ticks_per_slot": 120,
+      "positive_velocity_note_on_events": 924,
+      "encoded_sequence_characters": 2690
+    }
+  ],
+  "file_count": 9,
+  "total_tick_slots": 7614,
+  "positive_velocity_note_on_events": 7743,
+  "python_version": "3.13.15"
+}

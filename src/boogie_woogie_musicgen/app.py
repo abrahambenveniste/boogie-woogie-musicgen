@@ -53,7 +53,7 @@ def build_app() -> gr.Blocks:
                     label="Extra direction",
                     placeholder="For example: slower, relaxed swing with a warm upright-piano tone",
                 )
-                seconds = gr.Slider(4, MAX_SECONDS, value=8, step=1, label="Duration (seconds)")
+                seconds = gr.Slider(4, MAX_SECONDS, value=11, step=1, label="Duration (seconds)")
                 seed = gr.Number(value=42, precision=0, label="Seed")
                 temperature = gr.Slider(0.5, 1.5, value=1.0, step=0.05, label="Temperature")
                 guidance = gr.Slider(1.0, 5.0, value=3.0, step=0.1, label="Guidance scale")

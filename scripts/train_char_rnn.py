@@ -38,9 +38,9 @@ class CharacterLSTM(nn.Module):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("data/processed/training_data.txt"))
-    parser.add_argument("--checkpoint", type=Path, default=Path("models/boogie-char-lstm.pt"))
-    parser.add_argument("--log", type=Path, default=Path("outputs/symbolic/training-loss.csv"))
+    parser.add_argument("--input", type=Path, default=Path("data/processed/training_data_duration.txt"))
+    parser.add_argument("--checkpoint", type=Path, default=Path("models/boogie-char-lstm-duration.pt"))
+    parser.add_argument("--log", type=Path, default=Path("outputs/symbolic/training-loss-duration.csv"))
     parser.add_argument("--steps", type=int, default=1000)
     parser.add_argument("--sequence-length", type=int, default=128)
     parser.add_argument("--batch-size", type=int, default=8)
@@ -55,7 +55,7 @@ def main() -> None:
         raise SystemExit("Steps, batch size, and sequence length must be positive.")
 
     corpus_bytes = args.input.read_bytes()
-    corpus = corpus_bytes.decode("ascii").replace("\r\n", "\n").replace("\r", "\n")
+    corpus = corpus_bytes.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
     records = corpus_records(corpus)
     if not records:
         raise SystemExit("Training corpus contains no valid MIDI records.")
@@ -66,6 +66,12 @@ def main() -> None:
         raise SystemExit("Corpus is shorter than the configured sequence length.")
 
     pitch_tokens = sorted({token for _, _, sequence in records for token in sequence if token != " "})
+    corpus_metadata_path = args.input.with_suffix(".json")
+    corpus_metadata = (
+        json.loads(corpus_metadata_path.read_text(encoding="utf-8"))
+        if corpus_metadata_path.is_file()
+        else {}
+    )
     device = (
         "cuda"
         if args.device == "auto" and torch.cuda.is_available()
@@ -125,6 +131,11 @@ def main() -> None:
         "model_state_dict": model.cpu().state_dict(),
         "vocabulary": characters,
         "pitch_tokens": pitch_tokens,
+        "note_encoding": corpus_metadata.get("note_encoding", "onset"),
+        "grid_ticks_per_slot": corpus_metadata.get("grid_ticks_per_slot", 1),
+        "pitch_token_encoding": corpus_metadata.get(
+            "pitch_token_encoding", "Latin-1 one-byte characters using chr(33 + MIDI pitch)"
+        ),
         "corpus_sha256": hashlib.sha256(corpus_bytes).hexdigest(),
         "corpus_characters": len(corpus),
         "first_record": list(records[0][:2]),

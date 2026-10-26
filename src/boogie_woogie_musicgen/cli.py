@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--prompt", help="Use a custom prompt instead of a preset.")
     parser.add_argument("--preset", choices=sorted(PRESETS), default="classic-honky-tonk")
     parser.add_argument("--notes", default="", help="Extra direction appended to the preset.")
-    parser.add_argument("--seconds", type=int, default=8, help=f"1–{MAX_SECONDS} seconds.")
+    parser.add_argument("--seconds", type=int, default=11, help=f"1–{MAX_SECONDS} seconds (11 gives at least 10s of MusicGen audio).")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--device", default="auto", help="auto, cpu, cuda, or mps.")

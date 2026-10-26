@@ -129,9 +129,13 @@ def generation_provenance(midi_path: Path) -> dict[str, Any] | None:
     parameter_keys = (
         "seed",
         "temperature",
-        "requested_tick_slots",
+        "requested_duration_seconds",
+        "generated_grid_slots",
+        "grid_ticks_per_slot",
+        "duration_seconds",
         "ppqn",
         "tempo_us_per_quarter",
+        "note_encoding",
         "device",
         "torch_version",
         "checkpoint_sha256",
@@ -195,7 +199,7 @@ def build_report(source_dir: Path, generated_paths: list[Path]) -> dict[str, Any
     ]
     source_rates = [source["note_on_events_per_second"] for source in sources if source["note_on_events_per_second"] is not None]
     report = {
-        "schema_version": 3,
+        "schema_version": 4,
         "method": "Descriptive MIDI note-on and paired note-duration diagnostics computed with Mido using the same parser for source and generated files.",
         "source_files": sources,
         "source_collection_summary": {
@@ -214,7 +218,7 @@ def build_report(source_dir: Path, generated_paths: list[Path]) -> dict[str, Any
             "These measurements describe MIDI files; they do not measure musical quality, genre authenticity, originality, or listener preference.",
             "Pitch-event n-gram overlap is a narrow exact-sequence diagnostic, not a plagiarism or originality test.",
             "Note-duration summaries use matched note-on/note-off pairs and report lengths in MIDI ticks; unmatched note-ons are excluded.",
-            "The generated score is one stochastic sample from a model trained on only six source files.",
+            f"The generated score is one stochastic sample from a model trained on {len(sources)} source files.",
         ],
     }
     for source in sources:
@@ -244,4 +248,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

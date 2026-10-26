@@ -1,128 +1,70 @@
-# Reproducibility and operation
+# Run it again
 
-In one line: use these installs, commands, and saved run settings to recreate the project's examples.
+In one line: install the tool for the output you want, then use the saved checkpoint or rebuild it from the included MIDI files.
 
-## Python environment
+## Install
 
-Use Python 3.10 or newer. Install only the dependencies for the workflow you plan to run:
+Use Python 3.10 or newer:
 
 ```powershell
-python -m pip install -e ".[musicgen]"          # WAV generation CLI
-python -m pip install -e ".[musicgen,app]"      # WAV CLI and Gradio interface
-python -m pip install -e ".[symbolic]"          # MIDI generation/training and Mido tools
-python -m pip install -e ".[symbolic-modern]"   # MidiTok/Symusic tokens + Mido cross-check
-python -m pip install -e ".[musicgen,app,symbolic,symbolic-modern]"  # all features
+python -m pip install -e ".[symbolic]"          # MIDI LSTM, Mido
+python -m pip install -e ".[musicgen]"          # prompt-to-audio CLI
+python -m pip install -e ".[musicgen,app]"      # prompt-to-audio CLI and Gradio app
+python -m pip install -e ".[symbolic-modern]"   # optional MidiTok audit
 ```
 
-The symbolic-only extra installs PyTorch and Mido without the Transformers, audio, or Gradio packages. The audio interface requires both the `musicgen` and `app` extras.
+MusicGen downloads `facebook/musicgen-small` the first time and may run slowly on CPU. Its weights are CC-BY-NC 4.0 and are not checked into Git.
 
-The `symbolic-modern` extra adds MidiTok for the independent REMI event-token audit. It is not required by the character-level LSTM workflow.
+## Make a MIDI take
 
-MusicGen downloads `facebook/musicgen-small` from Hugging Face at first use. Its CC-BY-NC 4.0 weights are not stored in this repository. CUDA is preferred for practical speed; CPU fallback works but can be slow.
-
-## Rebuild the symbolic corpus
-
-Install Fourmilab MIDICSV 1.1, which supplies both `midicsv` and `csvmidi`, and place those executables on `PATH` or provide explicit executable paths. Then run:
+The trained duration-aware checkpoint is included, so start with sampling and decoding:
 
 ```powershell
-python scripts/normalize_type0.py `
-  --input data/raw_midi `
-  --output data/normalized_midi `
-  --manifest data/processed/normalization_manifest.csv
+python scripts/generate_char_rnn.py `
+  --seconds 10 `
+  --temperature 0.8 `
+  --seed 73
+python scripts/unprocess.py outputs/symbolic/boogie-rnn-duration-demo.txt `
+  --output-dir outputs/symbolic `
+  --prefix new-take `
+  --midi-backend mido
+```
+
+The `.mid` is symbolic. Open it in a MIDI player or DAW and select a piano sound.
+
+## Rebuild and train the duration-aware model
+
+```powershell
+python scripts/normalize_type0.py
+python scripts/process.py --note-encoding duration --grid-ticks-per-slot 120
+python scripts/train_char_rnn.py --steps 1000 --seed 42
+```
+
+The processor defaults to the duration-aware corpus paths. Its JSON sidecar records the corpus hash, nine input files, MIDI counts, grid resolution, and Python version. The checkpoint records its training settings and corpus hash.
+
+## Recreate the onset-only reference baseline
+
+The old six-score corpus and checkpoint remain in the repository. To rebuild that corpus from the normalized MIDI, install Fourmilab `midicsv` and select the original six files:
+
+```powershell
 python scripts/process.py `
   --input data/normalized_midi `
+  --files blastin_boogie.mid boogie_and_blues_bass_lines.mid boogie_ben.mid boogie_woogie_blues_exercises.mid pinetops_boogie_woogie_in_f.mid the_fives_boogie_woogie.mid `
+  --note-encoding onset `
   --output data/processed/training_data.txt `
   --manifest data/processed/processing_manifest.csv `
   --metadata data/processed/training_data.json `
-  --midicsv midicsv `
-  --midicsv-version "Fourmilab MIDICSV 1.1"
+  --midicsv midicsv
 ```
 
-`data/manifest.csv` contains PDMX source paths, IDs, metadata, and raw file hashes. `data/processed/processing_manifest.csv` contains the actual PPQN, first tempo, tick slots, note-on count, and encoded length measured by this project's processing run.
+This older text format stores note starts but not note-offs, so it cannot teach the model note lengths. That is why the current model uses the duration-aware format.
 
-## Train and sample the PyTorch LSTM
-
-The committed demonstration uses a checkpoint and JSON sidecar under `models/`. To reproduce a new run, keep the same corpus bytes, Python/PyTorch versions, model settings, and seed:
-
-```powershell
-python scripts/train_char_rnn.py `
-  --input data/processed/training_data.txt `
-  --checkpoint models/boogie-char-lstm.pt `
-  --log outputs/symbolic/training-loss.csv `
-  --steps 1000 `
-  --sequence-length 128 `
-  --batch-size 8 `
-  --embedding-size 32 `
-  --hidden-size 96 `
-  --layers 2 `
-  --learning-rate 0.002 `
-  --seed 42
-python scripts/generate_char_rnn.py `
-  --checkpoint models/boogie-char-lstm.pt `
-  --output outputs/symbolic/boogie-rnn-demo.txt `
-  --ticks 4800 `
-  --temperature 1.0 `
-  --seed 73
-```
-
-The checkpoint JSON records corpus SHA-256, vocabulary, architecture, training hyperparameters, seed, device, library versions, final cross-entropy, and creation time. The output JSON records checkpoint and corpus hashes, generation seed, temperature, tick count, tempo, PPQN, device, and output length. Random seeds do not ensure byte-for-byte identical results across all hardware/library versions.
-
-## Decode to MIDI
-
-```powershell
-python scripts/unprocess.py outputs/symbolic/boogie-rnn-demo.txt `
-  --output-dir outputs/symbolic `
-  --prefix boogie-rnn-demo `
-  --midi-backend csvmidi `
-  --csvmidi csvmidi `
-  --csvmidi-version "Fourmilab MIDICSV 1.1"
-```
-
-This writes a `.csv` intermediate and calls `csvmidi -z` to produce the MIDI file. If `csvmidi` is not installed, set `--midi-backend mido`; the Mido fallback implements the same tick/pitch decode and writes a one-track Type-0 MIDI. `--midi-backend auto` chooses `csvmidi` when available and otherwise uses Mido.
-
-The generated MIDI is symbolic. To make a WAV rendering, open it in a DAW or use a local SoundFont renderer such as TiMidity++; the soundfont is a separate dependency and is not bundled here.
-
-## Reproduce the controlled seed comparison
-
-The committed comparison holds the checkpoint, 4,800 tick slots, temperature 1.0, CPU device, and Mido decoder fixed. Seeds 73, 74, and 75 produce separate five-second MIDI takes. For each seed, generate and decode a take; for example:
-
-```powershell
-python scripts/generate_char_rnn.py `
-  --checkpoint models/boogie-char-lstm.pt `
-  --output outputs/symbolic/boogie-rnn-seed-073.txt `
-  --ticks 4800 --temperature 1.0 --seed 73 --device cpu
-python scripts/unprocess.py outputs/symbolic/boogie-rnn-seed-073.txt `
-  --output-dir outputs/symbolic `
-  --prefix boogie-rnn-seed-073 --midi-backend mido
-```
-
-Repeat with seeds `74` and `75`, changing both the output/prefix suffix and `--seed`. Then recreate the metrics:
-
-```powershell
-python scripts/evaluate_symbolic.py `
-  --generated outputs/symbolic/boogie-rnn-seed-073-000.mid `
-  --generated outputs/symbolic/boogie-rnn-seed-074-000.mid `
-  --generated outputs/symbolic/boogie-rnn-seed-075-000.mid
-```
-
-The MIDI outputs are short examples, not complete songs. Random seeds do not guarantee identical files across all hardware or library versions; each run's JSON sidecar records its settings and environment.
-
-## Fresh-checkout smoke check
-
-On 2026-10-26, a fresh shallow clone of the public repository generated, decoded, and evaluated another five-second Type-0 MIDI take (seed 76). This used the already-installed local Python environment (Python 3.13.15 and CPU PyTorch 2.14.1); it confirms the committed checkout, checkpoint, and symbolic scripts work together. It did not reinstall dependencies into an empty environment, so it is not a clean-install test. The symbolic workflow did not download MusicGen weights.
-
-## Legacy Torch7 route
-
-The exact historical workflow uses `crisbal/torch-rnn:base` and its upstream Torch7 `torch-rnn` checkout. See [`how-it-works.md`](how-it-works.md) for `scripts/preprocess.py`, `th train.lua`, and `th sample.lua` commands. The Docker image is based on Ubuntu 14.04 and is not pinned to a modern, maintained software stack. Docker was unavailable in the authoring environment, so the committed model and generated MIDI use the modern PyTorch implementation instead.
-
-## MusicGen inference recipe
-
-The committed audio sample uses the recipe in `outputs/boogie-woogie-demo.json`. A new take can be generated with:
+## Make a MusicGen clip over 10 seconds
 
 ```powershell
 boogie-woogie-generate `
   --preset classic-honky-tonk `
-  --seconds 8 `
+  --seconds 11 `
   --seed 42 `
   --temperature 1.0 `
   --top-k 250 `
@@ -130,5 +72,10 @@ boogie-woogie-generate `
   --output outputs/boogie-woogie-demo.wav
 ```
 
-The first call downloads model weights. Runtime, waveform details, and sampling settings are written to the matching JSON sidecar. Text prompts do not hard-constrain musical form or exact notes.
+The JSON beside the WAV records the prompt and runtime settings.
 
+## What the saved results show
+
+The current 10-second LSTM take has 51 note-on events, a median note length of 240 ticks, and zero exact 8-note matches in the limited source comparison. Those are reproducible MIDI measurements, not a listener score. The old onset-only samples and current duration-aware sample are both listed in [`evaluation.json`](../outputs/symbolic/evaluation.json).
+
+The first and final training losses are in [`training-loss-duration.csv`](../outputs/symbolic/training-loss-duration.csv). They are training readings only; no held-out evaluation is included.

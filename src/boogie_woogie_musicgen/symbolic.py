@@ -6,8 +6,11 @@ import csv
 import io
 import shutil
 import subprocess
+from collections import defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
+
+import mido
 
 
 @dataclass(frozen=True)
@@ -120,6 +123,105 @@ def encode_midi_file(midi_path: Path, midicsv: str = "midicsv") -> EncodedMidi:
     return parse_midi_csv(midi_to_csv_text(midi_path, midicsv))
 
 
+def encode_midi_file_duration(
+    midi_path: Path, grid_ticks_per_slot: int = 120
+) -> EncodedMidi:
+    """Encode note attacks and holds on a quantized grid, retaining duration.
+
+    An onset uses ``chr(33 + pitch)`` and a continued note uses
+    ``chr(256 + pitch)``. A space advances one grid slot. Notes are rounded to
+    the nearest grid position and clipped to at least one slot. With 480 PPQN,
+    the default grid is a sixteenth note.
+    """
+    if grid_ticks_per_slot < 1:
+        raise ValueError("grid_ticks_per_slot must be positive.")
+    midi = mido.MidiFile(midi_path)
+    if midi.type != 0 or len(midi.tracks) != 1:
+        raise ValueError("Input must be a one-track Type-0 MIDI. Run normalize_type0.py first.")
+    ppqn = midi.ticks_per_beat
+    if ppqn <= 0:
+        raise ValueError(f"Expected PPQN ticks, got MIDI division {ppqn}.")
+
+    tempo = next(
+        (message.tempo for message in midi.tracks[0] if message.type == "set_tempo"),
+        None,
+    )
+    if tempo is None:
+        raise ValueError("MIDI has no Tempo event; add one before processing.")
+    if not 1 <= tempo <= 0xFFFFFF:
+        raise ValueError(f"Tempo must be in 1..16777215 microseconds/quarter; got {tempo}.")
+
+    starts: dict[tuple[int, int], deque[int]] = defaultdict(deque)
+    intervals: list[tuple[int, int, int, int]] = []
+    tick = 0
+    note_on_events = 0
+    for message in midi.tracks[0]:
+        tick += message.time
+        if message.type == "note_on" and message.velocity > 0:
+            starts[(message.channel, message.note)].append(tick)
+            note_on_events += 1
+        elif message.type == "note_off" or (
+            message.type == "note_on" and message.velocity == 0
+        ):
+            key = (message.channel, message.note)
+            if starts[key]:
+                start_tick = starts[key].popleft()
+                start_slot = (start_tick + grid_ticks_per_slot // 2) // grid_ticks_per_slot
+                end_slot = max(
+                    start_slot + 1,
+                    (tick + grid_ticks_per_slot // 2) // grid_ticks_per_slot,
+                )
+                intervals.append((start_slot, end_slot, message.channel, message.note))
+
+    for (channel, pitch), open_ticks in starts.items():
+        for start_tick in open_ticks:
+            start_slot = (start_tick + grid_ticks_per_slot // 2) // grid_ticks_per_slot
+            end_slot = max(
+                start_slot + 1,
+                (tick + grid_ticks_per_slot // 2) // grid_ticks_per_slot,
+            )
+            intervals.append((start_slot, end_slot, channel, pitch))
+
+    starts_by_slot: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    ends_by_slot: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    for start_slot, end_slot, channel, pitch in intervals:
+        starts_by_slot[start_slot].append((channel, pitch))
+        ends_by_slot[end_slot].append((channel, pitch))
+    slot_count = max(
+        (tick + grid_ticks_per_slot - 1) // grid_ticks_per_slot,
+        max((end for _, end, _, _ in intervals), default=0),
+    )
+    if slot_count > 10_000_000:
+        raise ValueError(f"Refusing to allocate {slot_count:,} grid slots from one MIDI.")
+
+    active: dict[tuple[int, int], int] = {}
+    slots: list[str] = []
+    for slot in range(slot_count):
+        for key in ends_by_slot.get(slot, ()):
+            if active.get(key, 0) > 1:
+                active[key] -= 1
+            else:
+                active.pop(key, None)
+        new_pitches = {pitch for _, pitch in starts_by_slot.get(slot, ())}
+        for key in starts_by_slot.get(slot, ()):
+            active[key] = active.get(key, 0) + 1
+        pitches = {pitch for (_, pitch), count in active.items() if count > 0}
+        slots.append(
+            "".join(
+                chr((33 if pitch in new_pitches else 256) + pitch)
+                for pitch in sorted(pitches)
+            )
+        )
+
+    return EncodedMidi(
+        ppqn=ppqn,
+        tempo_us_per_quarter=tempo,
+        sequence=" ".join(slots),
+        max_tick=slot_count,
+        note_on_events=note_on_events,
+    )
+
+
 def corpus_records(text: str) -> list[tuple[int, int, str]]:
     """Return the three fields (PPQN, tempo, note stream) in each corpus block."""
     records: list[tuple[int, int, str]] = []
@@ -135,24 +237,40 @@ def corpus_records(text: str) -> list[tuple[int, int, str]]:
     return records
 
 
-def csv_from_record(ppqn: int, tempo_us_per_quarter: int, sequence: str) -> str:
+def csv_from_record(
+    ppqn: int,
+    tempo_us_per_quarter: int,
+    sequence: str,
+    note_encoding: str = "onset",
+    grid_ticks_per_slot: int = 1,
+) -> str:
     """Convert a reference-format note stream into one-track MIDI CSV.
 
-    Tick slots, rather than string character offsets, set event times. Note
-    lengths are inferred from the gap to the next generated onset group, since
-    the source representation has no note-off or duration token.
+    Tick slots, rather than string character offsets, set event times. A pitch
+    In duration mode, attack tokens retrigger pitches and hold tokens keep them
+    active. Legacy onset-only text lacks explicit holds and therefore keeps its
+    historical one-tick behavior.
     """
-    if ppqn <= 0 or not 1 <= tempo_us_per_quarter <= 0xFFFFFF:
+    if ppqn <= 0 or not 1 <= tempo_us_per_quarter <= 0xFFFFFF or grid_ticks_per_slot < 1:
         raise ValueError("PPQN or tempo metadata is outside MIDI's valid range.")
-    groups: list[list[int]] = []
+    groups: list[tuple[set[int], set[int]]] = []
     for slot in sequence.split(" "):
         pitches: list[int] = []
+        attacks: set[int] = set()
         for token in slot:
-            pitch = ord(token) - 33
+            codepoint = ord(token)
+            if note_encoding == "duration" and 256 <= codepoint <= 383:
+                pitch = codepoint - 256
+            elif 33 <= codepoint <= 160:
+                pitch = codepoint - 33
+                if note_encoding == "duration":
+                    attacks.add(pitch)
+            else:
+                raise ValueError(f"Invalid pitch token {token!r} (code point {codepoint}).")
             if not 0 <= pitch <= 127:
                 raise ValueError(f"Invalid pitch token {token!r} (decoded pitch {pitch}).")
             pitches.append(pitch)
-        groups.append(pitches)
+        groups.append((set(pitches), attacks))
 
     lines = [
         f"0, 0, Header, 0, 1, {ppqn}",
@@ -160,14 +278,14 @@ def csv_from_record(ppqn: int, tempo_us_per_quarter: int, sequence: str) -> str:
         f"1, 0, Tempo, {tempo_us_per_quarter}",
     ]
     active: set[int] = set()
-    for tick, group in enumerate(groups):
-        current = set(group)
-        for pitch in sorted(active - current):
+    for slot, (current, attacks) in enumerate(groups):
+        tick = slot * grid_ticks_per_slot
+        for pitch in sorted((active - current) | (active & attacks)):
             lines.append(f"1, {tick}, Note_off_c, 1, {pitch}, 0")
-        for pitch in sorted(current - active):
+        for pitch in sorted((current - active) | attacks):
             lines.append(f"1, {tick}, Note_on_c, 1, {pitch}, 96")
         active = current
-    end_tick = len(groups)
+    end_tick = len(groups) * grid_ticks_per_slot
     for pitch in sorted(active):
         lines.append(f"1, {end_tick}, Note_off_c, 1, {pitch}, 0")
     lines.extend([f"1, {end_tick}, End_track", "0, 0, End_of_file"])
